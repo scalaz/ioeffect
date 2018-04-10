@@ -5,10 +5,16 @@ jdk:
 script:
   - sbt ";+check ;+cpl ;+lint ;+doc ;+test"
   - if [ -z "$TRAVIS_PULL_REQUEST" ] ; then ./sbt publish ; fi
+
+before_cache:
+  - find $HOME/.sbt -name "*.lock" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+
 cache:
   directories:
   - $HOME/.sbt
   - $HOME/.ivy2
   - $HOME/.coursier
+
 notifications:
   email: false
