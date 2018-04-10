@@ -51,7 +51,9 @@ object ProjectPlugin extends AutoPlugin {
       scalaVersion := crossScalaVersions.value.head,
       sonatypeGithost := (Github, "scalaz", "effect"),
       sonatypeDevelopers := List("John de Goes"),
-      licenses := Seq("BSD3" -> url("https://opensource.org/licenses/BSD-3-Clause")),
+      licenses := Seq(
+        "BSD3" -> url("https://opensource.org/licenses/BSD-3-Clause")
+      ),
       startYear := Some(2017),
       scalafmtConfig := Some(file("project/scalafmt.conf")),
       scalafixConfig := Some(file("project/scalafix.conf"))
@@ -59,6 +61,7 @@ object ProjectPlugin extends AutoPlugin {
 
   override def projectSettings =
     Seq(
+      testFrameworks in Test := Seq(TestFrameworks.Specs2),
       MonadicFor,
       Silencer,
       scalacOptions ++= Seq(

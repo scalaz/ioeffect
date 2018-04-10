@@ -1,0 +1,20 @@
+language: scala
+jdk:
+  - openjdk8
+
+script:
+  - sbt ";+check ;+cpl ;+lint ;+doc ;+test"
+  - if [ -z "$TRAVIS_PULL_REQUEST" ] && [ "${TRAVIS_REPO_SLUG}" == "scalaz/effect" ] ; then sbt publish ; fi
+
+before_cache:
+  - find $HOME/.sbt -name "*.lock" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+
+cache:
+  directories:
+  - $HOME/.sbt
+  - $HOME/.ivy2
+  - $HOME/.coursier
+
+notifications:
+  email: false
