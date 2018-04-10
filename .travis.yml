@@ -1,0 +1,14 @@
+language: scala
+jdk:
+  - openjdk8
+
+script:
+  - sbt ";+check ;+cpl ;+lint ;+doc ;+test"
+  - if [ -z "$TRAVIS_PULL_REQUEST" ] ; then ./sbt publish ; fi
+cache:
+  directories:
+  - $HOME/.sbt
+  - $HOME/.ivy2
+  - $HOME/.coursier
+notifications:
+  email: false
