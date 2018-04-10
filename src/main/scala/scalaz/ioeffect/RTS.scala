@@ -531,7 +531,7 @@ private object RTS {
 
                             eval = false
 
-                          case _ =>
+                          case AsyncReturn.Later() =>
                             eval = false
                         }
                       } finally enterAsyncEnd()
@@ -824,7 +824,7 @@ private object RTS {
           case AsyncReturn.Now(tryA) => callback(right, leftWins)(tryA)
           case AsyncReturn.MaybeLater(cancel) =>
             canceler = cancel
-          case _ =>
+          case AsyncReturn.Later() =>
         }
 
         right.register(callback(left, rightWins)) match {
@@ -843,7 +843,7 @@ private object RTS {
                 cancel(t)
               }
             }
-          case _ =>
+          case AsyncReturn.Later() =>
         }
 
         if (canceler == null) AsyncReturn.later[IO[C]]
@@ -1139,7 +1139,7 @@ private object RTS {
       m match {
         case AsyncReturn.Now(v)        => AsyncReturn.Now(extract(v))
         case AsyncReturn.MaybeLater(c) => AsyncReturn.MaybeLater[B](c)
-        case _                         => AsyncReturn.later[B]
+        case AsyncReturn.Later()       => AsyncReturn.later[B]
       }
 
     private def purgeJoinersKillers(v: Try[A],
