@@ -30,22 +30,22 @@ class MVarTests(implicit ee: ExecutionEnv)
   def singleMVarEmptyTest = {
     val ioAction = for {
       mvar <- MVar.newEmptyMVar[Int](getEc)
-      _ <- mvar.put(1)
-      a <- mvar.read
-      b <- mvar.take
+      _    <- mvar.put(1)
+      a    <- mvar.read
+      b    <- mvar.take
     } yield a -> b
 
-    ioAction.unsafePerformIO() must_== (1 -> 1)
+    ioAction.unsafePerformIO().must_==(1 -> 1)
   }
 
   def singleMVarTest = {
     val ioAction = for {
       mvar <- MVar.newMVar(1)(getEc)
-      a <- mvar.read
-      b <- mvar.take
+      a    <- mvar.read
+      b    <- mvar.take
     } yield a -> b
 
-    ioAction.unsafePerformIO() must_== (1 -> 1)
+    ioAction.unsafePerformIO().must_==(1 -> 1)
   }
 
   def tryPutOnEmpty = {
@@ -55,16 +55,16 @@ class MVarTests(implicit ee: ExecutionEnv)
       put2 <- mvar.tryPut(2)
     } yield put1 && !put2
 
-    ioAction.unsafePerformIO() must_== true
+    ioAction.unsafePerformIO().must_==(true)
   }
 
   def tryPutOnNonEmpty = {
     val ioAction = for {
       mvar <- MVar.newMVar[Int](1)(getEc)
-      res <- mvar.tryPut(2)
+      res  <- mvar.tryPut(2)
     } yield res
 
-    ioAction.unsafePerformIO() must_== false
+    ioAction.unsafePerformIO().must_==(false)
   }
 
   def tryTakeOnEmpty = {
@@ -73,7 +73,7 @@ class MVarTests(implicit ee: ExecutionEnv)
       get1 <- mvar.tryTake
     } yield get1
 
-    ioAction.unsafePerformIO() must_== Maybe.empty
+    ioAction.unsafePerformIO().must_==(Maybe.empty)
   }
 
   def tryTakeOnNonEmpty = {
@@ -83,9 +83,8 @@ class MVarTests(implicit ee: ExecutionEnv)
       get2 <- mvar.tryTake
     } yield get1 -> get2
 
-    ioAction.unsafePerformIO() must_== (Maybe.just(1) -> Maybe.empty)
+    ioAction.unsafePerformIO().must_==(Maybe.just(1) -> Maybe.empty)
   }
-
 
   def peekOnEmpty = {
     val ioAction = for {
@@ -93,7 +92,7 @@ class MVarTests(implicit ee: ExecutionEnv)
       get2 <- mvar.peek
     } yield get2
 
-    ioAction.unsafePerformIO() must_== Maybe.empty
+    ioAction.unsafePerformIO().must_==(Maybe.empty)
   }
 
   def peekOnNonEmpty = {
@@ -102,20 +101,20 @@ class MVarTests(implicit ee: ExecutionEnv)
       get2 <- mvar.peek
     } yield get2
 
-    ioAction.unsafePerformIO() must_== Maybe.just(1)
+    ioAction.unsafePerformIO().must_==(Maybe.just(1))
   }
 
   def sequentialMVarTest = {
 
     val ioAction = for {
       mvar <- MVar.newEmptyMVar[Int](getEc)
-      _ <- mvar.put(1)
-      _ <- mvar.put(2).fork
-      a <- mvar.take
-      b <- mvar.take
+      _    <- mvar.put(1)
+      _    <- mvar.put(2).fork
+      a    <- mvar.take
+      b    <- mvar.take
     } yield (a -> b)
 
-    ioAction.unsafePerformIO() must_== (1 -> 2)
+    ioAction.unsafePerformIO().must_==(1 -> 2)
   }
 
 }
