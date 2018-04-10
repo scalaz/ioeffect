@@ -61,6 +61,7 @@ object ProjectPlugin extends AutoPlugin {
 
   override def projectSettings =
     Seq(
+      testFrameworks in Test := Seq(TestFrameworks.Specs2),
       MonadicFor,
       Silencer,
       scalacOptions ++= Seq(
