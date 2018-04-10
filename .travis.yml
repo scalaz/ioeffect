@@ -4,7 +4,7 @@ jdk:
 
 script:
   - sbt ";+check ;+cpl ;+lint ;+doc ;+test"
-  - if [ -z "$TRAVIS_PULL_REQUEST" ] ; then ./sbt publish ; fi
+  - if [ -z "$TRAVIS_PULL_REQUEST" ] && [ "${TRAVIS_REPO_SLUG}" == "scalaz/effect" ] ; then sbt publish ; fi
 
 before_cache:
   - find $HOME/.sbt -name "*.lock" | xargs rm
