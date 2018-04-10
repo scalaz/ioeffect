@@ -7,11 +7,12 @@ import org.specs2.specification.core.SpecStructure
 
 import scala.concurrent.ExecutionContext
 import scalaz._
+import org.specs2.matcher.MatchResult
 
-class MVarTests(implicit ee: ExecutionEnv)
+class MVarTests(implicit @unused ee: ExecutionEnv)
     extends Specification
     with AroundTimeout {
-  def getEc = ExecutionContext.Implicits.global
+  def getEc: ExecutionContext = ExecutionContext.Implicits.global
 
   def is: SpecStructure =
     s2"""
@@ -27,7 +28,7 @@ class MVarTests(implicit ee: ExecutionEnv)
            have deterministic sequential take/put behaviour       $sequentialMVarTest
       """
 
-  def singleMVarEmptyTest = {
+  def singleMVarEmptyTest: MatchResult[Any] = {
     val ioAction = for {
       mvar <- MVar.newEmptyMVar[Int](getEc)
       _    <- mvar.put(1)
@@ -38,7 +39,7 @@ class MVarTests(implicit ee: ExecutionEnv)
     ioAction.unsafePerformIO().must_==(1 -> 1)
   }
 
-  def singleMVarTest = {
+  def singleMVarTest: MatchResult[Any] = {
     val ioAction = for {
       mvar <- MVar.newMVar(1)(getEc)
       a    <- mvar.read
@@ -48,7 +49,7 @@ class MVarTests(implicit ee: ExecutionEnv)
     ioAction.unsafePerformIO().must_==(1 -> 1)
   }
 
-  def tryPutOnEmpty = {
+  def tryPutOnEmpty: MatchResult[Any] = {
     val ioAction = for {
       mvar <- MVar.newEmptyMVar[Int](getEc)
       put1 <- mvar.tryPut(1)
@@ -58,7 +59,7 @@ class MVarTests(implicit ee: ExecutionEnv)
     ioAction.unsafePerformIO().must_==(true)
   }
 
-  def tryPutOnNonEmpty = {
+  def tryPutOnNonEmpty: MatchResult[Any] = {
     val ioAction = for {
       mvar <- MVar.newMVar[Int](1)(getEc)
       res  <- mvar.tryPut(2)
@@ -67,7 +68,7 @@ class MVarTests(implicit ee: ExecutionEnv)
     ioAction.unsafePerformIO().must_==(false)
   }
 
-  def tryTakeOnEmpty = {
+  def tryTakeOnEmpty: MatchResult[Any] = {
     val ioAction = for {
       mvar <- MVar.newEmptyMVar[Int](getEc)
       get1 <- mvar.tryTake
@@ -76,7 +77,7 @@ class MVarTests(implicit ee: ExecutionEnv)
     ioAction.unsafePerformIO().must_==(Maybe.empty)
   }
 
-  def tryTakeOnNonEmpty = {
+  def tryTakeOnNonEmpty: MatchResult[Any] = {
     val ioAction = for {
       mvar <- MVar.newMVar[Int](1)(getEc)
       get1 <- mvar.tryTake
@@ -86,7 +87,7 @@ class MVarTests(implicit ee: ExecutionEnv)
     ioAction.unsafePerformIO().must_==(Maybe.just(1) -> Maybe.empty)
   }
 
-  def peekOnEmpty = {
+  def peekOnEmpty: MatchResult[Any] = {
     val ioAction = for {
       mvar <- MVar.newEmptyMVar[Int](getEc)
       get2 <- mvar.peek
@@ -95,7 +96,7 @@ class MVarTests(implicit ee: ExecutionEnv)
     ioAction.unsafePerformIO().must_==(Maybe.empty)
   }
 
-  def peekOnNonEmpty = {
+  def peekOnNonEmpty: MatchResult[Any] = {
     val ioAction = for {
       mvar <- MVar.newMVar[Int](1)(getEc)
       get2 <- mvar.peek
@@ -104,7 +105,7 @@ class MVarTests(implicit ee: ExecutionEnv)
     ioAction.unsafePerformIO().must_==(Maybe.just(1))
   }
 
-  def sequentialMVarTest = {
+  def sequentialMVarTest: MatchResult[Any] = {
 
     val ioAction = for {
       mvar <- MVar.newEmptyMVar[Int](getEc)
