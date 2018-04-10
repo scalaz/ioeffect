@@ -10,6 +10,8 @@ import org.specs2.specification.AroundTimeout
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.core.SpecStructure
 
+import com.github.ghik.silencer.silent
+
 class RTSSpec(implicit ee: ExecutionEnv)
     extends Specification
     with AroundTimeout
@@ -79,7 +81,6 @@ class RTSSpec(implicit ee: ExecutionEnv)
     race of value & never                   ${upTo(1.second)(
       testRaceOfValueNever
     )}
-    
   """
 
   def testPoint: MatchResult[Int] =
@@ -88,6 +89,7 @@ class RTSSpec(implicit ee: ExecutionEnv)
   def testPointIsLazy: MatchResult[IO[Nothing]] =
     IO.point(throw new Error("Not lazy")).must(not(throwA[Throwable]))
 
+  @silent
   def testNowIsEager: MatchResult[IO[Nothing]] =
     (IO.now(throw new Error("Eager"))).must(throwA[Error])
 
