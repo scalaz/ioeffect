@@ -14,6 +14,13 @@ object ProjectKeys {
   def MonadicFor =
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.1.0")
 
+  private val silencerVersion = "0.6"
+  def Silencer =
+    libraryDependencies ++= Seq(
+      compilerPlugin("com.github.ghik" %% "silencer-plugin" % silencerVersion),
+      "com.github.ghik" %% "silencer-lib" % silencerVersion % "provided"
+    )
+
   def extraScalacOptions(scalaVersion: String) =
     CrossVersion.partialVersion(scalaVersion) match {
       case Some((2, 12)) =>
@@ -53,6 +60,7 @@ object ProjectPlugin extends AutoPlugin {
   override def projectSettings =
     Seq(
       MonadicFor,
+      Silencer,
       scalacOptions ++= Seq(
         "-language:_",
         "-unchecked",
