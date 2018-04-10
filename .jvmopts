@@ -1,4 +1,9 @@
--Xms3784m
--Xmx3784m
+-Dfile.encoding=UTF8
 -XX:MaxMetaspaceSize=1g
--Xss4m
+-Xss2m
+-Xms1g
+-Xmx1g
+-XX:ReservedCodeCacheSize=128m
+-XX:+CMSClassUnloadingEnabled
+-XX:+UseG1GC
+-XX:+UseStringDeduplication
