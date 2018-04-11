@@ -65,18 +65,12 @@ object ProjectPlugin extends AutoPlugin {
       MonadicFor,
       Silencer,
       scalacOptions ++= Seq(
-        "-language:_",
         "-unchecked",
         "-explaintypes",
-        "-Ywarn-value-discard",
-        "-Ywarn-numeric-widen",
-        "-Ywarn-dead-code",
         "-Ypartial-unification",
         "-Xlog-free-terms",
         "-Xlog-free-types",
-        "-Xlog-reflective-calls",
-        "-Yrangepos",
-        "-Xexperimental" // SAM types in 2.11
+        "-Xlog-reflective-calls"
       ),
       scalacOptions ++= extraScalacOptions(scalaVersion.value)
     )
