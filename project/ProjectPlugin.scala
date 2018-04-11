@@ -49,7 +49,7 @@ object ProjectPlugin extends AutoPlugin {
       organization := "org.scalaz",
       crossScalaVersions := Seq("2.12.4", "2.11.12"),
       scalaVersion := crossScalaVersions.value.head,
-      sonatypeGithost := (Github, "scalaz", "effect"),
+      sonatypeGithost := (Github, "scalaz", "ioeffect"),
       sonatypeDevelopers := List("John de Goes"),
       licenses := Seq(
         "BSD3" -> url("https://opensource.org/licenses/BSD-3-Clause")
