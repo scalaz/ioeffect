@@ -31,7 +31,7 @@ object AsyncReturn {
     // avoids object alloc, whilst allowing exhaustivity checking
     // the Later_ subclass is for scala/bug#10822
     // (it makes the pattern matcher think that `Later()` can match `AsyncReturn[A]`)
-    private[this] final class Later_[+A] extends Later[A]
+    private[this] final class Later_[+A /* scalafix:ok */ ] extends Later[A]
     private[this] val value: Later[Nothing] = new Later_[Nothing]
     def apply[A](): AsyncReturn[A]          = value.asInstanceOf[AsyncReturn[A]]
   }
