@@ -17,15 +17,24 @@ sealed abstract class AsyncReturn[A] { self =>
     self match {
       case Now(v)        => now(v)
       case MaybeLater(c) => maybeLater(c)
-      case _             => later
+      case Later()       => later
     }
 }
 object AsyncReturn {
   type Canceler = Throwable => Unit
 
-  private final case object Later                    extends AsyncReturn[Nothing]
   final case class Now[A](value: A)                  extends AsyncReturn[A]
   final case class MaybeLater[A](canceler: Canceler) extends AsyncReturn[A]
+  sealed abstract case class Later[A] private ()     extends AsyncReturn[A]
+
+  object Later {
+    // avoids object alloc, whilst allowing exhaustivity checking
+    // the Later_ subclass is for scala/bug#10822
+    // (it makes the pattern matcher think that `Later()` can match `AsyncReturn[A]`)
+    private[this] final class Later_[+A /* scalafix:ok */ ] extends Later[A]
+    private[this] val value: Later[Nothing] = new Later_[Nothing]
+    def apply[A](): AsyncReturn[A]          = value.asInstanceOf[AsyncReturn[A]]
+  }
 
   /**
    * Constructs an `AsyncReturn` that represents an uninterruptible asynchronous
@@ -34,7 +43,7 @@ object AsyncReturn {
    *
    * See `IO.async0` for more information.
    */
-  final def later[A]: AsyncReturn[A] = Later.asInstanceOf[AsyncReturn[A]]
+  final def later[A]: AsyncReturn[A] = Later()
 
   /**
    * Constructs an `AsyncReturn` that represents a synchronous return. The
