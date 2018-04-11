@@ -27,8 +27,7 @@ object ProjectKeys {
         Seq(
           "-Ywarn-unused:explicits,patvars,imports,privates,locals,implicits",
           "-opt:l:method,inline",
-          "-opt-inline-from:scalaz.**",
-          "-opt-inline-from:xmlformat.**"
+          "-opt-inline-from:scalaz.**"
         )
       case _ =>
         Seq("-Xexperimental")
