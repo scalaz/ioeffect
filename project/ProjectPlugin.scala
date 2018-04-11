@@ -27,8 +27,7 @@ object ProjectKeys {
         Seq(
           "-Ywarn-unused:explicits,patvars,imports,privates,locals,implicits",
           "-opt:l:method,inline",
-          "-opt-inline-from:scalaz.**",
-          "-opt-inline-from:xmlformat.**"
+          "-opt-inline-from:scalaz.**"
         )
       case _ =>
         Seq("-Xexperimental")
@@ -65,19 +64,14 @@ object ProjectPlugin extends AutoPlugin {
       MonadicFor,
       Silencer,
       scalacOptions ++= Seq(
-        "-language:_",
         "-unchecked",
         "-explaintypes",
-        "-Ywarn-value-discard",
-        "-Ywarn-numeric-widen",
-        "-Ywarn-dead-code",
         "-Ypartial-unification",
         "-Xlog-free-terms",
         "-Xlog-free-types",
-        "-Xlog-reflective-calls",
-        "-Yrangepos",
-        "-Xexperimental" // SAM types in 2.11
+        "-Xlog-reflective-calls"
       ),
+      scalacOptions -= "-Ywarn-extra-implicit", // bug in sbt-sensible
       scalacOptions ++= extraScalacOptions(scalaVersion.value)
     )
 }
