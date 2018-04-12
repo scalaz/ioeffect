@@ -71,7 +71,6 @@ object ProjectPlugin extends AutoPlugin {
         "-Xlog-free-types",
         "-Xlog-reflective-calls"
       ),
-      scalacOptions -= "-Ywarn-extra-implicit", // bug in sbt-sensible
       scalacOptions ++= extraScalacOptions(scalaVersion.value)
     )
 }
