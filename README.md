@@ -4,7 +4,7 @@
 
 Backport of the [IO Monad](http://degoes.net/articles/only-one-io) to scalaz 7.2.
 
-There are no binary our source compatibility guarantees between releases of this preview.
+There are no binary or source compatibility guarantees between releases of this preview.
 
 ```scala
 libraryDependencies += "org.scalaz" %% "scalaz-ioeffect" % "<version>"
