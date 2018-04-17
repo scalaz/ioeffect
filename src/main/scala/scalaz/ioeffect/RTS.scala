@@ -746,7 +746,7 @@ private object RTS {
      *
      * @param value The value produced by the asynchronous computation.
      */
-    private final def resumeAsync[A](value: ExitResult[E, Any]): Unit =
+    private final def resumeAsync(value: ExitResult[E, Any]): Unit =
       if (shouldResumeAsync()) {
         // TODO: CPS transform
         // Take care not to overflow the stack in cases of 'deeply' nested
@@ -756,11 +756,11 @@ private object RTS {
         } else resumeEvaluate(value)
       }
 
-    private final def raceWith[A, B, C](
+    private final def raceWith[Z, B, C](
       unhandled: Throwable => IO[Void, Unit],
-      leftIO: IO[E, A],
+      leftIO: IO[E, Z],
       rightIO: IO[E, B],
-      finish: (A, Fiber[E, B]) \/ (B, Fiber[E, A]) => IO[E, C]
+      finish: (Z, Fiber[E, B]) \/ (B, Fiber[E, Z]) => IO[E, C]
     ): IO[E, C] = {
       import RaceState._
 
@@ -769,8 +769,8 @@ private object RTS {
 
       // TODO: Interrupt raced fibers if parent is interrupted?
 
-      val leftWins  = (w: A, r: Fiber[E, B]) => finish(-\/((w, r)))
-      val rightWins = (w: B, l: Fiber[E, A]) => finish(\/-((w, l)))
+      val leftWins  = (w: Z, r: Fiber[E, B]) => finish(-\/((w, r)))
+      val rightWins = (w: B, l: Fiber[E, Z]) => finish(\/-((w, l)))
 
       IO.flatten(IO.async0[E, IO[E, C]] { resume =>
         val state = new AtomicReference[RaceState](Started)
@@ -871,8 +871,8 @@ private object RTS {
     final def enterSupervision: IO[E, Unit] = IO.sync {
       supervising += 1
 
-      def newWeakSet[A]: Set[A] =
-        Collections.newSetFromMap[A](new WeakHashMap[A, java.lang.Boolean]())
+      def newWeakSet[B]: Set[B] =
+        Collections.newSetFromMap[B](new WeakHashMap[B, java.lang.Boolean]())
 
       val set = newWeakSet[FiberContext[_, _]]
 
@@ -1055,8 +1055,8 @@ private object RTS {
       }
     }
 
-    def changeError[E1, E2, A](f: E2 => ExitResult[E1, A],
-                               cb: Callback[E1, A]): Callback[E2, A] = {
+    def changeError[E1, E2, A1](f: E2 => ExitResult[E1, A1],
+                                cb: Callback[E1, A1]): Callback[E2, A1] = {
       case ExitResult.Completed(a)  => cb(ExitResult.Completed(a))
       case ExitResult.Terminated(t) => cb(ExitResult.Terminated(t))
       case ExitResult.Failed(e2)    => cb(f(e2))
