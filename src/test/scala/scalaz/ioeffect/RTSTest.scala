@@ -91,7 +91,7 @@ class RTSSpec(implicit ee: ExecutionEnv)
     IO.point(throw new Error("Not lazy")).must(not(throwA[Throwable]))
 
   def testNowIsEager: MatchResult[IO[Nothing, Nothing]] =
-    IO.point(throw new Error("Eager")).must(throwA[Error])
+    IO.now(throw new Error("Eager")).must(throwA[Error])
 
   def testSuspendIsLazy: MatchResult[IO[Nothing, Nothing]] =
     IO.suspend(throw new Error("Eager")).must(not(throwA[Throwable]))
