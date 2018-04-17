@@ -73,6 +73,7 @@ object ProjectPlugin extends AutoPlugin {
         "-Xlog-reflective-calls"
       ),
       scalacOptions ++= extraScalacOptions(scalaVersion.value),
-      scalacOptions in (Compile, compile) -= "-Xfatal-warnings"
+      scalacOptions in Compile -= "-Xfatal-warnings",
+      scalacOptions in Test -= "-Xfatal-warnings"
     )
 }
