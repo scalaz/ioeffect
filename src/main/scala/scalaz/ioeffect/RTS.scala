@@ -711,11 +711,11 @@ private object RTS {
       }
     }
 
-    final def fork(
-      io: IO[E, A],
+    final def fork[E1, A1](
+      io: IO[E1, A1],
       handler: Throwable => IO[Void, Unit]
-    ): FiberContext[E, A] = {
-      val context = new FiberContext[E, A](rts, handler)
+    ): FiberContext[E1, A1] = {
+      val context = new FiberContext[E1, A1](rts, handler)
 
       rts.submit(context.evaluate(io))
 
