@@ -9,6 +9,8 @@ import scalaz.{ -\/, \/, \/- }
 
 import scala.annotation.{ switch, tailrec }
 import scala.concurrent.duration.Duration
+import java.util.concurrent.{ ExecutorService, ScheduledExecutorService }
+import scalaz.ioeffect.RTS.FiberStatus.Executing
 
 /**
  * This trait provides a high-performance implementation of a runtime system for
@@ -74,7 +76,7 @@ trait RTS {
   /**
    * The main thread pool used for executing fibers.
    */
-  val threadPool = Executors.newFixedThreadPool(
+  val threadPool: ExecutorService = Executors.newFixedThreadPool(
     Runtime.getRuntime().availableProcessors().max(2)
   )
 
@@ -92,7 +94,8 @@ trait RTS {
    */
   final val YieldMaxOpCount = 1048576
 
-  lazy val scheduledExecutor = Executors.newScheduledThreadPool(1)
+  lazy val scheduledExecutor: ScheduledExecutorService =
+    Executors.newScheduledThreadPool(1)
 
   final def submit[A](block: =>A): Unit = {
     threadPool.submit(new Runnable {
@@ -1174,7 +1177,7 @@ private object RTS {
     final case class Done[E, A](value: ExitResult[E, A])
         extends FiberStatus[E, A]
 
-    def Initial[E, A] = Executing[E, A](Nil, Nil)
+    def Initial[E, A]: Executing[E, A] = Executing[E, A](Nil, Nil)
   }
 
   val _SuccessUnit: ExitResult[Nothing, Unit] = ExitResult.Completed(())
