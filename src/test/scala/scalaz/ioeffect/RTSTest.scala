@@ -12,6 +12,7 @@ import org.specs2.specification.core.SpecStructure
 import scala.`package`.{ BigInt, Throwable }
 import scalaz.\/
 
+
 class RTSSpec(implicit ee: ExecutionEnv)
     extends Specification
     with AroundTimeout
@@ -91,7 +92,7 @@ class RTSSpec(implicit ee: ExecutionEnv)
     IO.point(throw new Error("Not lazy")).must(not(throwA[Throwable]))
 
   def testNowIsEager: MatchResult[IO[Nothing, Nothing]] =
-    (IO.now(throw new Error("Eager"))).must(throwA[Error])
+    IO.point(throw new Error("Eager")).must(throwA[Error])
 
   def testSuspendIsLazy: MatchResult[IO[Nothing, Nothing]] =
     IO.suspend(throw new Error("Eager")).must(not(throwA[Throwable]))
