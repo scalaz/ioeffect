@@ -11,7 +11,6 @@ import org.specs2.matcher.MatchResult
 import org.specs2.specification.core.SpecStructure
 import scala.`package`.{ BigInt, Throwable }
 import scalaz.\/
-import scalaz.ioeffect.IO
 
 class RTSSpec(implicit ee: ExecutionEnv)
     extends Specification
