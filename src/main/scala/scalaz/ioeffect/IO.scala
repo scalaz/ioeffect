@@ -406,11 +406,11 @@ sealed abstract class IO[E, A] { self =>
     IO.flatten(nanoTime.flatMap { start =>
       val gapNs = interval.toNanos
 
-      def tick[B](n: Int): IO[E, B] =
+      def tick[C](n: Int): IO[E, C] =
         self *> nanoTime.flatMap { now =>
           val await = ((start + n * gapNs) - now).max(0L)
 
-          IO.sleep(await.nanoseconds) *> tick[B](n + 1)
+          IO.sleep(await.nanoseconds) *> tick(n + 1)
         }
 
       tick(1)
