@@ -2,6 +2,8 @@ name := "scalaz-ioeffect"
 
 val specs2Version = "4.0.3"
 
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
+
 libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core"          % "7.2.21",
   "org.specs2" %% "specs2-core"          % specs2Version % "test",

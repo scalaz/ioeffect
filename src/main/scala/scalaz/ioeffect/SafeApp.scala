@@ -1,6 +1,5 @@
 // Copyright (C) 2017 John A. De Goes. All rights reserved.
-package scalaz
-package ioeffect
+package scalaz.ioeffect
 
 /**
  * The entry point for a purely-functional application on the JVM.
@@ -10,7 +9,7 @@ package ioeffect
  * import scalaz.effect.console._
  *
  * object MyApp extends SafeApp {
- *   def run(args: List[String]): IO[Unit] =
+ *   def run(args: List[String]): IO[E, Unit] =
  *     for {
  *       _ <- putStrLn("Hello! What is your name?")
  *       n <- getStrLn
@@ -20,12 +19,13 @@ package ioeffect
  * }}}
  */
 trait SafeApp extends RTS {
+  type Error
 
   /**
    * The main function of the application, which will be passed the command-line
    * arguments to the program.
    */
-  def run(args: List[String]): IO[Unit]
+  def run(args: List[String]): IO[Error, Unit]
 
   /**
    * The Scala main function, intended to be called only by the Scala runtime.
