@@ -711,7 +711,7 @@ private object RTS {
       }
     }
 
-    final def fork[E, A](
+    final def fork(
       io: IO[E, A],
       handler: Throwable => IO[Void, Unit]
     ): FiberContext[E, A] = {
