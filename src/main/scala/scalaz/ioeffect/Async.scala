@@ -30,7 +30,6 @@ object Async {
   final case class MaybeLater[E, A](interruptor: Interruptor)
       extends Async[E, A]
 
-
   /**
    * Constructs an `Async` that represents an uninterruptible asynchronous
    * action. The action should invoke the callback passed to the handler when
