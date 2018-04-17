@@ -2,6 +2,8 @@ package scalaz
 package ioeffect
 
 import com.github.ghik.silencer.silent
+import scalaz.Leibniz.===
+import scalaz.Liskov.<~<
 
 trait VoidModule {
   type Void
@@ -9,6 +11,10 @@ trait VoidModule {
   def absurd[A](v: Void): A
 
   def unsafeVoid: Void
+
+  def isNothing: Void === Nothing
+
+  def conforms[A]: Void <~< A
 }
 
 trait VoidFunctions {
@@ -34,5 +40,9 @@ private[ioeffect] object VoidImpl extends VoidModule with VoidSyntax {
   private[ioeffect] final class UnsafeVoid extends RuntimeException
 
   def unsafeVoid: Void = throw new UnsafeVoid
+
+  def isNothing: Void === Nothing = Leibniz.refl[Void]
+
+  def conforms[A]: Void <~< A = Liskov.refl[Void]
 
 }
