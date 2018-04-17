@@ -12,7 +12,6 @@ import org.specs2.specification.core.SpecStructure
 import scala.`package`.{ BigInt, Throwable }
 import scalaz.\/
 
-
 class RTSSpec(implicit ee: ExecutionEnv)
     extends Specification
     with AroundTimeout
