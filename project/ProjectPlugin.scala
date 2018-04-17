@@ -63,6 +63,7 @@ object ProjectPlugin extends AutoPlugin {
       testFrameworks in Test := Seq(TestFrameworks.Specs2),
       MonadicFor,
       Silencer,
+      KindProjector,
       scalacOptions ++= Seq(
         "-unchecked",
         "-explaintypes",
