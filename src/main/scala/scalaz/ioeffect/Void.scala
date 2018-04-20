@@ -1,7 +1,6 @@
 package scalaz
 package ioeffect
 
-import com.github.ghik.silencer.silent
 import scalaz.Leibniz.===
 import scalaz.Liskov.<~<
 
@@ -31,7 +30,6 @@ trait VoidSyntax {
 // but without this object syntax doesn't resolve...
 object VoidModule extends VoidSyntax
 
-@silent
 private[ioeffect] object VoidImpl extends VoidModule with VoidSyntax {
   type Void = Nothing
 

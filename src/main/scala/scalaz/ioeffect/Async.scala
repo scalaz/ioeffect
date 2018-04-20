@@ -13,17 +13,14 @@ sealed abstract class Async[E, A]
 object Async {
   type Interruptor = Throwable => Unit
 
-  // scalafix:off
   sealed abstract case class Later[E, A] private () extends Async[E, A]
   object Later {
     // @xuwei-k's trick with a fix by @hrhino. We eliminate allocation overhead
     // but also preserve exhaustivity checking.
-    // scalafix:off
-    private[this] final class Later_[+E, +A] extends Later[E, A]
+    private[this] final class Later_[+E, +A] extends Later[E, A] // scalafix:ok DisableSyntax.covariant
     private[this] val value: Later[Nothing, Nothing] =
       new Later_[Nothing, Nothing]
     def apply[E, A](): Async[E, A] = value.asInstanceOf[Later[E, A]]
-    // scalafix:ok
   }
   // TODO: Optimize this common case to less overhead with opaque types
   final case class Now[E, A](value: ExitResult[E, A]) extends Async[E, A]

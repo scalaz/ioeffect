@@ -2,15 +2,15 @@
 package scalaz.ioeffect
 
 import scala.concurrent.duration._
+
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.specification.AroundTimeout
-import scalaz.-\/
-import scalaz.ioeffect.Errors.UnhandledError
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.core.SpecStructure
-import scala.`package`.{ BigInt, Throwable }
-import scalaz.\/
+
+import scalaz._
+import scalaz.ioeffect.Errors.UnhandledError
 
 class RTSSpec(implicit ee: ExecutionEnv)
     extends Specification
