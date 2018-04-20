@@ -342,3 +342,13 @@ These defaults help guarantee stack safety and cooperative multitasking. They ca
 # Legal
 
 Copyright (C) 2017-2018 John A. De Goes. All rights reserved.
+
+Backport of the [IO Monad](http://degoes.net/articles/only-one-io) to scalaz 7.2.
+
+There are no binary or source compatibility guarantees between releases of this preview.
+
+```scala
+libraryDependencies += "org.scalaz" %% "scalaz-ioeffect" % "<version>"
+```
+
+where `<version>` is the latest on [maven central](http://search.maven.org/#search|ga|1|g:org.scalaz%20a:scalaz-ioeffect_2.12).
