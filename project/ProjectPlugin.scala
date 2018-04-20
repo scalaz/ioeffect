@@ -63,6 +63,7 @@ object ProjectPlugin extends AutoPlugin {
       testFrameworks in Test := Seq(TestFrameworks.Specs2),
       MonadicFor,
       Silencer,
+      KindProjector,
       scalacOptions ++= Seq(
         "-unchecked",
         "-explaintypes",
@@ -71,6 +72,8 @@ object ProjectPlugin extends AutoPlugin {
         "-Xlog-free-types",
         "-Xlog-reflective-calls"
       ),
-      scalacOptions ++= extraScalacOptions(scalaVersion.value)
+      scalacOptions ++= extraScalacOptions(scalaVersion.value),
+      scalacOptions in Compile -= "-Xfatal-warnings",
+      scalacOptions in Test -= "-Xfatal-warnings"
     )
 }
