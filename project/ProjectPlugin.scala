@@ -12,7 +12,10 @@ object ProjectKeys {
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
 
   def MonadicFor =
-    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.1.0")
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.0")
+
+  def SemanticDB =
+    addCompilerPlugin(scalafixSemanticdb)
 
   private val silencerVersion = "0.6"
   def Silencer =
@@ -64,7 +67,9 @@ object ProjectPlugin extends AutoPlugin {
       MonadicFor,
       Silencer,
       KindProjector,
+      SemanticDB,
       scalacOptions ++= Seq(
+        "-Yrangepos", // needed by semanticdb
         "-unchecked",
         "-explaintypes",
         "-Ypartial-unification",
@@ -73,7 +78,5 @@ object ProjectPlugin extends AutoPlugin {
         "-Xlog-reflective-calls"
       ),
       scalacOptions ++= extraScalacOptions(scalaVersion.value),
-      scalacOptions in Compile -= "-Xfatal-warnings",
-      scalacOptions in Test -= "-Xfatal-warnings"
     )
 }
