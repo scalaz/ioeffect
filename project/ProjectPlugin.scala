@@ -78,5 +78,8 @@ object ProjectPlugin extends AutoPlugin {
         "-Xlog-reflective-calls"
       ),
       scalacOptions ++= extraScalacOptions(scalaVersion.value),
+      // WORKAROUND https://github.com/ghik/silencer/issues/7
+      scalacOptions in Compile -= "-Xfatal-warnings",
+      scalacOptions in Test -= "-Xfatal-warnings"
     )
 }
