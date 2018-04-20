@@ -65,7 +65,6 @@ object ProjectPlugin extends AutoPlugin {
     Seq(
       testFrameworks in Test := Seq(TestFrameworks.Specs2),
       MonadicFor,
-      Silencer,
       KindProjector,
       SemanticDB,
       scalacOptions ++= Seq(
@@ -79,7 +78,6 @@ object ProjectPlugin extends AutoPlugin {
       ),
       scalacOptions ++= extraScalacOptions(scalaVersion.value),
       // WORKAROUND https://github.com/ghik/silencer/issues/7
-      scalacOptions in Compile -= "-Xfatal-warnings",
-      scalacOptions in Test -= "-Xfatal-warnings"
+      scalacOptions -= "-Ywarn-dead-code"
     )
 }

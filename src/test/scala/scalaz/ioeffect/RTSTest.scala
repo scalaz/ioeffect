@@ -3,7 +3,6 @@ package scalaz.ioeffect
 
 import scala.concurrent.duration._
 
-import com.github.ghik.silencer.silent
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.specification.AroundTimeout
@@ -91,7 +90,6 @@ class RTSSpec(implicit ee: ExecutionEnv)
   def testPointIsLazy: MatchResult[IO[Nothing, Nothing]] =
     IO.point(throw new Error("Not lazy")).must(not(throwA[Throwable]))
 
-  @silent
   def testNowIsEager: MatchResult[IO[Nothing, Nothing]] =
     IO.now(throw new Error("Eager")).must(throwA[Error])
 
