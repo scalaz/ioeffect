@@ -2,7 +2,6 @@ package scalaz.ioeffect
 
 import cats.effect
 import cats.effect.ConcurrentEffect
-import cats.syntax.either._
 
 import scalaz._
 
@@ -12,22 +11,26 @@ package object catscompat extends RTS {
     effect.Fiber[IO[E, ?], A](f.join, f.interrupt(new Exception))
 
   implicit val catsConcurrentEffect = new ConcurrentEffect[Task] {
-    def runCancelable[A](fa: Task[A])(
-        cb: Either[Throwable, A] => effect.IO[Unit])
+    def runCancelable[A](
+        fa: Task[A]
+    )(cb: Either[Throwable, A] => effect.IO[Unit])
       : effect.IO[effect.IO[Unit]] = {
+      val f = fa
+        .attempt[Throwable]
+        .flatMap(e => IO.syncThrowable(cb(e.toEither).unsafeRunAsync(_ => ())))
+        .fork[Throwable]
+
       effect.IO {
-        tryUnsafePerformIO(fa.fork) match {
-          case ExitResult.Completed(fib) =>
-            effect.IO.suspend(
-              cb(Right(unsafePerformIO(fib.interrupt(new Exception)))))
-          case ExitResult.Failed(e)     => effect.IO.suspend(cb(Left(e)))
-          case ExitResult.Terminated(e) => effect.IO.suspend(cb(Left(e)))
+        val fiber = unsafePerformIO(f)
+        effect.IO {
+          unsafePerformIO(fiber.interrupt(new Exception))
         }
       }
     }
 
     def cancelable[A](
-        k: (Either[Throwable, A] => Unit) => effect.IO[Unit]): Task[A] = {
+        k: (Either[Throwable, A] => Unit) => effect.IO[Unit]
+    ): Task[A] = {
       val cb = k.compose[ExitResult[Throwable, A] => Unit] {
         _.compose[Either[Throwable, A]] {
           case Left(r)  => ExitResult.Failed(r)
@@ -46,21 +49,24 @@ package object catscompat extends RTS {
     def start[A](fa: Task[A]): Task[effect.Fiber[Task, A]] =
       fa.fork.map(toCatsFiber)
 
-    def racePair[A, B](fa: Task[A], fb: Task[B])
-      : Task[Either[(A, effect.Fiber[Task, B]), (effect.Fiber[Task, A], B)]] =
+    def racePair[A, B](
+        fa: Task[A],
+        fb: Task[B]
+    ): Task[Either[(A, effect.Fiber[Task, B]), (effect.Fiber[Task, A], B)]] =
       fa.raceWith(fb) {
         case \/-((res, fib)) => IO.now(Right((toCatsFiber(fib), res)))
         case -\/((res, fib)) => IO.now(Left((res, toCatsFiber(fib))))
       }
 
-    def runAsync[A](fa: Task[A])(
-        cb: Either[Throwable, A] => effect.IO[Unit]): effect.IO[Unit] = {
-      effect.IO.async { cb =>
-        tryUnsafePerformIO(fa) match {
-          case ExitResult.Completed(r)  => cb(Right(r))
-          case ExitResult.Failed(l)     => cb(Left(l))
-          case ExitResult.Terminated(l) => cb(Left(l))
-        }
+    def runAsync[A](
+        fa: Task[A]
+    )(cb: Either[Throwable, A] => effect.IO[Unit]): effect.IO[Unit] = {
+      effect.IO {
+        unsafePerformIO(
+          fa.attempt[Throwable]
+            .flatMap(r =>
+              IO.syncThrowable(cb(r.toEither).unsafeRunAsync(_ => ())))
+            .fork[Throwable])
       }
     }
 
