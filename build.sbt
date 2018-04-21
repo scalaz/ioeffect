@@ -1,12 +1,5 @@
-val specs2Version = "4.1.0"
-
 val ioeffect = project.settings(
-  name := "scalaz-ioeffect",
-  libraryDependencies ++= Seq(
-    "org.scalaz" %% "scalaz-core"          % "7.2.21",
-    "org.specs2" %% "specs2-core"          % specs2Version % "test",
-    "org.specs2" %% "specs2-matcher-extra" % specs2Version % "test"
-  )
+  name := "scalaz-ioeffect"
 )
 
 // conveniences

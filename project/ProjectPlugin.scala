@@ -24,6 +24,8 @@ object ProjectKeys {
       "com.github.ghik" %% "silencer-lib" % silencerVersion % "provided"
     )
 
+  val specs2Version = "4.1.0"
+
   def extraScalacOptions(scalaVersion: String) =
     CrossVersion.partialVersion(scalaVersion) match {
       case Some((2, 12)) =>
@@ -78,6 +80,11 @@ object ProjectPlugin extends AutoPlugin {
       ),
       scalacOptions ++= extraScalacOptions(scalaVersion.value),
       // WORKAROUND https://github.com/ghik/silencer/issues/7
-      scalacOptions -= "-Ywarn-dead-code"
+      scalacOptions -= "-Ywarn-dead-code",
+      libraryDependencies ++= Seq(
+        "org.scalaz" %% "scalaz-core"          % "7.2.21",
+        "org.specs2" %% "specs2-core"          % specs2Version % "test",
+        "org.specs2" %% "specs2-matcher-extra" % specs2Version % "test"
+      )
     )
 }
