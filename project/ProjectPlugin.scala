@@ -65,7 +65,7 @@ object ProjectPlugin extends AutoPlugin {
 
   override def projectSettings =
     Seq(
-      testFrameworks in Test := Seq(TestFrameworks.Specs2),
+      testFrameworks in Test := Seq(TestFrameworks.Specs2, TestFrameworks.ScalaCheck, TestFrameworks.ScalaTest),
       MonadicFor,
       KindProjector,
       SemanticDB,

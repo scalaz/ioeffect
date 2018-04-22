@@ -2,7 +2,9 @@ package scalaz.ioeffect
 
 import cats.effect
 import cats.effect.ConcurrentEffect
+import cats.syntax.all._
 
+import scala.util.control.NonFatal
 import scalaz._
 
 package object catscompat extends RTS {
@@ -64,9 +66,9 @@ package object catscompat extends RTS {
       effect.IO {
         unsafePerformIO(
           fa.attempt[Throwable]
-            .flatMap(r =>
-              IO.syncThrowable(cb(r.toEither).unsafeRunAsync(_ => ())))
-            .fork[Throwable])
+            .map(r => cb(r.toEither).unsafeRunAsync(_ => ()))
+            .fork[Throwable]
+        )
       }
     }
 
@@ -81,7 +83,13 @@ package object catscompat extends RTS {
       IO.async(kk)
     }
 
-    def suspend[A](thunk: => Task[A]): Task[A] = IO.suspend(thunk)
+    def suspend[A](thunk: => Task[A]): Task[A] = IO.suspend(
+      try {
+        thunk
+      } catch {
+        case NonFatal(e) => IO.fail(e)
+      }
+    )
 
     def raiseError[A](e: Throwable): Task[A] = IO.fail(e)
 

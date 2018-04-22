@@ -2,14 +2,16 @@ package scalaz.ioeffect
 
 import java.io.{ByteArrayOutputStream, PrintStream}
 
-import cats.effect.laws.discipline.ConcurrentEffectTests
+import cats.effect.laws.discipline.{ConcurrentEffectTests, EffectTests}
 import org.typelevel.discipline.scalatest.Discipline
 import cats.effect.laws.util.{TestContext, TestInstances}
 import org.typelevel.discipline.Laws
 import org.scalatest.prop.Checkers
 import org.scalatest.{FunSuite, Matchers, Tag}
+
 import scalaz.ioeffect.catscompat._
 import cats.implicits._
+
 import scala.util.control.NonFatal
 
 class IOCatsLawsTest
@@ -55,5 +57,5 @@ class IOCatsLawsTest
       }
   }
 
-  checkAllAsync("ConcurrentEffect[Task]", implicit e => ConcurrentEffectTests[Task].concurrentEffect[Int, Int, Int])
+  checkAllAsync("Effect[Task]", implicit e => EffectTests[Task].effect[Int, Int, Int])
 }
