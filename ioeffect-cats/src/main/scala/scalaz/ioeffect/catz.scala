@@ -8,7 +8,7 @@ import scala.util.control.NonFatal
 
 object catz extends RTS {
 
-  implicit val catsEffectInstance = new Effect[Task] {
+  implicit val catsEffectInstance: Effect[Task] = new Effect[Task] {
     def runAsync[A](
       fa: Task[A]
     )(cb: Either[Throwable, A] => effect.IO[Unit]): effect.IO[Unit] =
