@@ -2,17 +2,14 @@ package scalaz.ioeffect
 
 import cats.effect.laws.ConcurrentEffectLaws
 import cats.Eq
+import cats.effect.laws.util.TestInstances
 import cats.syntax.all._
 import org.scalacheck.{Arbitrary, Cogen, Gen}
 
 import catscompat._
 
-trait IOScalaCheckInstances {
+trait IOScalaCheckInstances extends TestInstances{
 
-  implicit lazy val equalityThrowable = new Eq[Throwable] {
-    override def eqv(x: Throwable, y: Throwable): Boolean =
-      x.getClass == y.getClass && x.getMessage == x.getMessage
-  }
   implicit def cogenTask[A](implicit cga: Cogen[A]): Cogen[Task[A]] =
     Cogen[Unit].contramap(_ => ()) // YOLO
 

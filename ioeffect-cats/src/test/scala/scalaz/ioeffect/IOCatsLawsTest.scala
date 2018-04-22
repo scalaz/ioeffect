@@ -12,8 +12,13 @@ import scalaz.ioeffect.catscompat._
 import cats.implicits._
 import scala.util.control.NonFatal
 
-class IOCatsLawsTest extends FunSuite with Matchers with Checkers with Discipline
-  with TestInstances with IOScalaCheckInstances {
+class IOCatsLawsTest
+    extends FunSuite
+    with Matchers
+    with Checkers
+    with Discipline
+    with IOScalaCheckInstances {
+
 
   /**
     * Silences `System.err`, only printing the output in case exceptions are
@@ -46,11 +51,9 @@ class IOCatsLawsTest extends FunSuite with Matchers with Checkers with Disciplin
 
     for ((id, prop) ← ruleSet.all.properties)
       test(name + "." + id) {
-        check(prop)
+        silenceSystemErr(check(prop))
       }
   }
 
-
-  checkAllAsync("Yollo", implicit e => ConcurrentEffectTests[Task].concurrentEffect[Int, Int, Int])
-
+  checkAllAsync("ConcurrentEffect[Task]", implicit e => ConcurrentEffectTests[Task].concurrentEffect[Int, Int, Int])
 }
