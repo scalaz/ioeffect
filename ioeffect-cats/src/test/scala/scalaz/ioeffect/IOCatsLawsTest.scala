@@ -1,13 +1,13 @@
 package scalaz.ioeffect
 
-import java.io.{ByteArrayOutputStream, PrintStream}
+import java.io.{ ByteArrayOutputStream, PrintStream }
 
-import cats.effect.laws.discipline.{ConcurrentEffectTests, EffectTests}
+import cats.effect.laws.discipline.EffectTests
 import org.typelevel.discipline.scalatest.Discipline
-import cats.effect.laws.util.{TestContext, TestInstances}
+import cats.effect.laws.util.{ TestContext, TestInstances }
 import org.typelevel.discipline.Laws
 import org.scalatest.prop.Checkers
-import org.scalatest.{FunSuite, Matchers, Tag}
+import org.scalatest.{ FunSuite, Matchers, Tag }
 
 import scalaz.ioeffect.catscompat._
 import cats.implicits._
@@ -21,16 +21,15 @@ class IOCatsLawsTest
     with Discipline
     with IOScalaCheckInstances {
 
-
   /**
-    * Silences `System.err`, only printing the output in case exceptions are
-    * thrown by the executed `thunk`.
-    */
-  def silenceSystemErr[A](thunk: => A): A = synchronized {
+   * Silences `System.err`, only printing the output in case exceptions are
+   * thrown by the executed `thunk`.
+   */
+  def silenceSystemErr[A](thunk: =>A): A = synchronized {
     // Silencing System.err
-    val oldErr = System.err
+    val oldErr    = System.err
     val outStream = new ByteArrayOutputStream()
-    val fakeErr = new PrintStream(outStream)
+    val fakeErr   = new PrintStream(outStream)
     System.setErr(fakeErr)
     try {
       val result = thunk
@@ -57,5 +56,6 @@ class IOCatsLawsTest
       }
   }
 
-  checkAllAsync("Effect[Task]", implicit e => EffectTests[Task].effect[Int, Int, Int])
+  checkAllAsync("Effect[Task]",
+                implicit e => EffectTests[Task].effect[Int, Int, Int])
 }
