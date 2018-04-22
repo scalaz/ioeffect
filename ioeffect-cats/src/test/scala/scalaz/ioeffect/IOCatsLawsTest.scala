@@ -4,12 +4,12 @@ import java.io.{ ByteArrayOutputStream, PrintStream }
 
 import cats.effect.laws.discipline.EffectTests
 import org.typelevel.discipline.scalatest.Discipline
-import cats.effect.laws.util.{ TestContext, TestInstances }
+import cats.effect.laws.util.TestContext
 import org.typelevel.discipline.Laws
 import org.scalatest.prop.Checkers
-import org.scalatest.{ FunSuite, Matchers, Tag }
+import org.scalatest.{ FunSuite, Matchers }
 
-import scalaz.ioeffect.catscompat._
+import scalaz.ioeffect.catz._
 import cats.implicits._
 
 import scala.util.control.NonFatal
@@ -46,7 +46,7 @@ class IOCatsLawsTest
     }
   }
 
-  def checkAllAsync(name: String, f: TestContext => Laws#RuleSet) {
+  def checkAllAsync(name: String, f: TestContext => Laws#RuleSet): Unit = {
     val context = TestContext()
     val ruleSet = f(context)
 

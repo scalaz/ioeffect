@@ -1,16 +1,15 @@
 package scalaz.ioeffect
 
-import cats.effect.laws.ConcurrentEffectLaws
 import cats.Eq
 import cats.effect.laws.util.TestInstances
 import cats.syntax.all._
 import org.scalacheck.{ Arbitrary, Cogen, Gen }
 
-import catscompat._
+import catz._
 
 trait IOScalaCheckInstances extends TestInstances {
 
-  implicit def cogenTask[A](implicit cga: Cogen[A]): Cogen[Task[A]] =
+  implicit def cogenTask[A]: Cogen[Task[A]] =
     Cogen[Unit].contramap(_ => ()) // YOLO
 
   //Todo: define in terms of `unsafeRunAsync` which John said he'll add

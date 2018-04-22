@@ -1,12 +1,12 @@
 package scalaz.ioeffect
 
 import cats.effect
-import cats.effect.{ ConcurrentEffect, Effect }
+import cats.effect.Effect
 import cats.syntax.all._
 
 import scala.util.control.NonFatal
 
-package object catscompat extends RTS {
+object catz extends RTS {
 
   implicit val catsEffectInstance = new Effect[Task] {
     def runAsync[A](
