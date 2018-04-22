@@ -2,7 +2,7 @@ val ioeffect = project.settings(
   name := "scalaz-ioeffect"
 )
 
-val `ioeffect-cats` = project
+val cats = project
   .settings(
     name := "scalaz-ioeffect-cats",
     libraryDependencies ++= Seq(
