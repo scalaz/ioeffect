@@ -1,5 +1,15 @@
 [![Build Status](https://travis-ci.org/scalaz/ioeffect.svg?branch=master)](https://travis-ci.org/scalaz/ioeffect)
 
+Backport of the [IO Monad](http://degoes.net/articles/only-one-io) to scalaz 7.2.
+
+There are no binary or source compatibility guarantees between releases of this preview.
+
+```scala
+libraryDependencies += "org.scalaz" %% "scalaz-ioeffect" % "<version>"
+```
+
+where `<version>` is the latest on [maven central](http://search.maven.org/#search|ga|1|g:org.scalaz%20a:scalaz-ioeffect_2.12).
+
 # scalaz-ioeffect
 
 The `scalaz.ioeffect` package provides a general-purpose effect monad and associated abstractions for purely functional Scala applications.
@@ -338,17 +348,3 @@ Fibers only ever shift onto the thread pool of the runtime system, which means t
 For performance reasons, fibers will attempt to execute on the same thread for a (configurable) minimum period, before yielding to other fibers. Fibers that resume from asynchronous callbacks will resume on the initiating thread, and continue for some time before yielding and resuming on the runtime thread pool.
 
 These defaults help guarantee stack safety and cooperative multitasking. They can be changed in `RTS` if automatic thread shifting is not desired.
-
-# Legal
-
-Copyright (C) 2017-2018 John A. De Goes. All rights reserved.
-
-Backport of the [IO Monad](http://degoes.net/articles/only-one-io) to scalaz 7.2.
-
-There are no binary or source compatibility guarantees between releases of this preview.
-
-```scala
-libraryDependencies += "org.scalaz" %% "scalaz-ioeffect" % "<version>"
-```
-
-where `<version>` is the latest on [maven central](http://search.maven.org/#search|ga|1|g:org.scalaz%20a:scalaz-ioeffect_2.12).
