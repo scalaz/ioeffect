@@ -63,7 +63,7 @@ import java.io.IOException
 object MyApp extends SafeApp {
   type Error = IOException
 
-  def run(args: IList[String]): IO[Error, Unit] =
+  def run(args: List[String]): IO[Error, Unit] =
     for {
       _ <- putStrLn("Hello! What is your name?")
       n <- getStrLn
