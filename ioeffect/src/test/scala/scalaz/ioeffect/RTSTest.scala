@@ -81,8 +81,26 @@ class RTSSpec(implicit ee: ExecutionEnv)
     race of value & never                   ${upTo(1.second)(
       testRaceOfValueNever
     )}
+    multiple par of two values              $testPar
 
   """
+
+  // Reproduces bug #30
+  def testPar: Seq[MatchResult[Int]] = Seq.fill(1000) {
+    val io1: IO[Void, Int] = IO.now(1)
+    val io2: IO[Void, Int] = IO.now(2)
+
+    // some times it works, some others it fails with cast exception or it never finishes
+    // it's worth mentioning that it only happens for loops grater than 100 times
+    // sample failed case:
+    // [error]  java.lang.ClassCastException: scala.Tuple2 cannot be cast to java.lang.Integer (file:1)
+    val ioPar: IO[Void, (Int, Int)] = io1.par(io2)
+
+    // non-parallel way always works
+    // val ioPar: IO[Void, (Int, Int)] = io1.flatMap(one => io2.map((one, _)))
+
+    unsafePerformIO(ioPar.map(x => x._1 + x._2)).must_===(3)
+  }
 
   def testPoint: MatchResult[Int] =
     unsafePerformIO(IO.point(1)).must_===(1)
