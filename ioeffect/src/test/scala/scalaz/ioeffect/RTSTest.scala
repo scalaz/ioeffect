@@ -81,6 +81,11 @@ class RTSSpec(implicit ee: ExecutionEnv)
     race of value & never                   ${upTo(1.second)(
       testRaceOfValueNever
     )}
+    par regression                          ${upTo(5.seconds)(testPar)}
+    par of now values                       ${upTo(5.seconds)(testRepeatedPar)}
+
+  RTS regression tests
+    regression 1                            $testDeadlockRegression
 
   """
 
@@ -167,10 +172,10 @@ class RTSSpec(implicit ee: ExecutionEnv)
 
     unsafePerformIO(
       IO.fail[Throwable, Unit](ExampleError)
-        .ensuring(IO.sync[Throwable, Unit] { finalized = true; () })
+        .ensuring(IO.sync[Void, Unit] { finalized = true; () })
     ).must(
       throwA(
-        ExampleError
+        UnhandledError(ExampleError)
       )
     )
     finalized.must_===(true)
@@ -181,8 +186,8 @@ class RTSSpec(implicit ee: ExecutionEnv)
 
     unsafePerformIO(
       IO.fail[Throwable, Unit](ExampleError)
-        .onError(_ => IO.sync[Throwable, Unit] { finalized = true; () })
-    ).must(throwA(ExampleError))
+        .onError(_ => IO.sync[Void, Unit] { finalized = true; () })
+    ).must(throwA(UnhandledError(ExampleError)))
 
     finalized.must_===(true)
   }
@@ -190,8 +195,8 @@ class RTSSpec(implicit ee: ExecutionEnv)
   def testErrorInFinalizerCannotBeCaught: MatchResult[Int] = {
     val nested: IO[Throwable, Int] =
       IO.fail[Throwable, Int](ExampleError)
-        .ensuring(IO.fail[Throwable, Unit](new Error("e2")))
-        .ensuring(IO.fail[Throwable, Unit](new Error("e3")))
+        .ensuring(IO.terminate(new Error("e2")))
+        .ensuring(IO.terminate(new Error("e3")))
 
     unsafePerformIO(nested).must(throwA(UnhandledError(ExampleError)))
   }
@@ -200,20 +205,20 @@ class RTSSpec(implicit ee: ExecutionEnv)
     var reported: Throwable = null
 
     unsafePerformIO {
-      IO.point[Throwable, Int](42)
-        .ensuring(IO.fail[Throwable, Unit](ExampleError))
+      IO.point[Void, Int](42)
+        .ensuring(IO.terminate(ExampleError))
         .fork0(e => IO.sync[Void, Unit] { reported = e; () })
     }
 
     // FIXME: Is this an issue with thread synchronization?
     while (reported == null) Thread.`yield`()
 
-    ((throw reported): Int).must(throwA(UnhandledError(ExampleError)))
+    ((throw reported): Int).must(throwA(ExampleError))
   }
 
   def testExitResultIsUsageResult: MatchResult[Int] =
     unsafePerformIO(
-      IO.unit.bracket_(IO.unit[Throwable])(IO.point[Throwable, Int](42))
+      IO.unit.bracket_(IO.unit[Void])(IO.point[Throwable, Int](42))
     ).must_===(42)
 
   def testBracketErrorInAcquisition: MatchResult[Unit] =
@@ -223,8 +228,8 @@ class RTSSpec(implicit ee: ExecutionEnv)
 
   def testBracketErrorInRelease: MatchResult[Unit] =
     unsafePerformIO(
-      IO.unit.bracket_(IO.fail[Throwable, Unit](ExampleError))(IO.unit)
-    ).must(throwA(UnhandledError(ExampleError)))
+      IO.unit[Void].bracket_(IO.terminate(ExampleError))(IO.unit[Void])
+    ).must(throwA(ExampleError))
 
   def testBracketErrorInUsage: MatchResult[Unit] =
     unsafePerformIO(
@@ -233,26 +238,18 @@ class RTSSpec(implicit ee: ExecutionEnv)
 
   def testBracketRethrownCaughtErrorInAcquisition: MatchResult[Unit] = {
     lazy val actual = unsafePerformIO(
-      IO.absolve(
-        IO.fail[Throwable, Unit](ExampleError)
-          .bracket_(IO.unit)(IO.unit)
-          .attempt[Throwable]
-      )
+      IO.unit[Void].bracket_(IO.terminate(ExampleError))(IO.unit[Void])
     )
 
-    actual.must(throwA(UnhandledError(ExampleError)))
+    actual.must(throwA(ExampleError))
   }
 
   def testBracketRethrownCaughtErrorInRelease: MatchResult[Unit] = {
     lazy val actual = unsafePerformIO(
-      IO.absolve(
-        IO.unit
-          .bracket_(IO.fail[Throwable, Unit](ExampleError))(IO.unit)
-          .attempt[Throwable]
-      )
+      IO.unit[Void].bracket_(IO.terminate(ExampleError))(IO.unit[Void])
     )
 
-    actual.must(throwA(UnhandledError(ExampleError)))
+    actual.must(throwA(ExampleError))
   }
 
   def testBracketRethrownCaughtErrorInUsage: MatchResult[Unit] = {
@@ -268,8 +265,8 @@ class RTSSpec(implicit ee: ExecutionEnv)
   }
 
   def testEvalOfAsyncAttemptOfFail: MatchResult[Unit] = {
-    val io1 = IO.unit.bracket_(AsyncUnit)(asyncExampleError[Unit])
-    val io2 = AsyncUnit.bracket_(IO.unit)(asyncExampleError[Unit])
+    val io1 = IO.unit.bracket_(AsyncUnit[Void])(asyncExampleError[Unit])
+    val io2 = AsyncUnit[Throwable].bracket_(IO.unit)(asyncExampleError[Unit])
 
     unsafePerformIO(io1).must(throwA(UnhandledError(ExampleError)))
     unsafePerformIO(io2).must(throwA(UnhandledError(ExampleError)))
@@ -360,6 +357,41 @@ class RTSSpec(implicit ee: ExecutionEnv)
   def testRaceOfValueNever: Boolean =
     unsafePerformIO(IO.point(42).race(IO.never[Throwable, Int])) == 42
 
+  def testRepeatedPar: MatchResult[Int] = {
+    def countdown(n: Int): IO[Void, Int] =
+      if (n == 0) IO.now(0)
+      else
+        IO.now[Void, Int](1)
+          .par(IO.now[Void, Int](2))
+          .flatMap(t => countdown(n - 1).map(y => t._1 + t._2 + y))
+
+    unsafePerformIO(countdown(50)).must_===(150)
+  }
+
+  def testPar: Seq[MatchResult[Int]] =
+    0.to(1000).map { _ =>
+      unsafePerformIO(
+        IO.now[Void, Int](1)
+          .par(IO.now[Void, Int](2))
+          .flatMap(t => IO.now(t._1 + t._2))
+      ).must_===(3)
+    }
+
+  def testDeadlockRegression: MatchResult[Unit] = {
+    import java.util.concurrent.Executors
+
+    val e = Executors.newSingleThreadExecutor()
+
+    for (i <- 0.until(10000)) {
+      val t = IO.async[Void, Int] { cb =>
+        val _ = e.submit[Unit](() => cb(ExitResult.Completed(1)))
+      }
+      unsafePerformIO(t)
+    }
+
+    e.shutdown().must_===(())
+  }
+
   // Utility stuff
   val ExampleError: Exception = new Exception("Oh noes!")
 
@@ -401,6 +433,5 @@ class RTSSpec(implicit ee: ExecutionEnv)
         v2 <- f2.join
       } yield v1 + v2
 
-  val AsyncUnit: IO[Throwable, Unit] =
-    IO.async[Throwable, Unit](_(ExitResult.Completed(())))
+  def AsyncUnit[E]: IO[E, Unit] = IO.async[E, Unit](_(ExitResult.Completed(())))
 }
