@@ -384,7 +384,9 @@ class RTSSpec(implicit ee: ExecutionEnv)
 
     for (i <- 0.until(10000)) {
       val t = IO.async[Void, Int] { cb =>
-        val _ = e.submit[Unit](() => cb(ExitResult.Completed(1)))
+        val _ = e.submit[Unit](new java.util.concurrent.Callable[Unit] {
+          def call(): Unit = cb(ExitResult.Completed(1))
+        })
       }
       unsafePerformIO(t)
     }
