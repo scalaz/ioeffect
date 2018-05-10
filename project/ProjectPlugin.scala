@@ -12,7 +12,7 @@ object ProjectKeys {
     addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
 
   def MonadicFor =
-    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.0")
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.4")
 
   def SemanticDB =
     addCompilerPlugin(scalafixSemanticdb)
@@ -24,7 +24,7 @@ object ProjectKeys {
       "com.github.ghik" %% "silencer-lib" % silencerVersion % "provided"
     )
 
-  val specs2Version = "4.1.0"
+  val specs2Version = "4.2.0"
 
   def extraScalacOptions(scalaVersion: String) =
     CrossVersion.partialVersion(scalaVersion) match {
@@ -32,6 +32,7 @@ object ProjectKeys {
         Seq(
           "-Ywarn-unused:explicits,patvars,imports,privates,locals,implicits",
           "-opt:l:method,inline",
+          "-opt-inline-from:scala.**",
           "-opt-inline-from:scalaz.**"
         )
       case _ =>
@@ -84,7 +85,7 @@ object ProjectPlugin extends AutoPlugin {
       // WORKAROUND https://github.com/ghik/silencer/issues/7
       scalacOptions -= "-Ywarn-dead-code",
       libraryDependencies ++= Seq(
-        "org.scalaz" %% "scalaz-core"          % "7.2.21",
+        "org.scalaz" %% "scalaz-core"          % "7.2.22",
         "org.specs2" %% "specs2-core"          % specs2Version % "test",
         "org.specs2" %% "specs2-matcher-extra" % specs2Version % "test"
       )
