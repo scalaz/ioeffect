@@ -12,10 +12,7 @@ import org.specs2.specification.core.SpecStructure
 import scalaz._
 import scalaz.ioeffect.Errors.UnhandledError
 
-class RTSSpec(implicit ee: ExecutionEnv)
-    extends Specification
-    with AroundTimeout
-    with RTS {
+class RTSSpec(implicit ee: ExecutionEnv) extends Specification with AroundTimeout with RTS {
 
   override def defaultHandler[E]: Throwable => IO[E, Unit] = _ => IO.unit[E]
 
@@ -313,14 +310,13 @@ class RTSSpec(implicit ee: ExecutionEnv)
     ).must_===(())
 
   def testDeepBindOfAsyncChainIsStackSafe: MatchResult[Int] = {
-    val result = 0.until(10000).foldLeft(IO.point[Throwable, Int](0)) {
-      (acc, _) =>
-        acc.flatMap(
-          n =>
-            IO.async[Throwable, Int](
-              _(ExitResult.Completed[Throwable, Int](n + 1))
-          )
+    val result = 0.until(10000).foldLeft(IO.point[Throwable, Int](0)) { (acc, _) =>
+      acc.flatMap(
+        n =>
+          IO.async[Throwable, Int](
+            _(ExitResult.Completed[Throwable, Int](n + 1))
         )
+      )
     }
 
     unsafePerformIO(result).must_===(10000)

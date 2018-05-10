@@ -17,8 +17,7 @@ val cats = project
 // conveniences
 addCommandAlias("cpl", "all compile test:compile")
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
-addCommandAlias("check",
-                "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
+addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
 addCommandAlias("lint", "all compile:scalafixTest test:scalafixTest")
 addCommandAlias("fix", "all compile:scalafixCli test:scalafixCli")
 
