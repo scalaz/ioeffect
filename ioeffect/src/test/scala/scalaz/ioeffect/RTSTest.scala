@@ -19,6 +19,7 @@ class RTSSpec(implicit ee: ExecutionEnv) extends Specification with AroundTimeou
   def is: SpecStructure =
     s2"""
   RTS synchronous correctness
+    widen Void                              $testWidenVoid
     evaluation of point                     $testPoint
     point must be lazy                      $testPointIsLazy
     now must be eager                       $testNowIsEager
@@ -59,6 +60,8 @@ class RTSSpec(implicit ee: ExecutionEnv) extends Specification with AroundTimeou
     deep map of now                         $testDeepMapOfNow
     deep map of sync effect                 $testDeepMapOfSyncEffectIsStackSafe
     deep attempt                            $testDeepAttemptIsStackSafe
+    deep absolve/attempt is identity        $testDeepAbsolveAttemptIsIdentity
+    deep async absolve/attempt is identity  $testDeepAsyncAbsolveAttemptIsIdentity
 
   RTS asynchronous stack safety
     deep bind of async chain                $testDeepBindOfAsyncChainIsStackSafe
@@ -88,6 +91,18 @@ class RTSSpec(implicit ee: ExecutionEnv) extends Specification with AroundTimeou
 
   def testPoint: MatchResult[Int] =
     unsafePerformIO(IO.point(1)).must_===(1)
+
+  def testWidenVoid: MatchResult[String] = {
+    val op1 = IO.sync[RuntimeException, String]("1")
+    val op2 = IO.sync[Void, String]("2")
+
+    val result: IO[RuntimeException, String] = for {
+      r1 <- op1
+      r2 <- op2.widen[RuntimeException]
+    } yield r1 + r2
+
+    unsafePerformIO(result) must_=== "12"
+  }
 
   def testPointIsLazy: MatchResult[IO[Nothing, Nothing]] =
     IO.point(throw new Error("Not lazy")).must(not(throwA[Throwable]))
@@ -208,7 +223,7 @@ class RTSSpec(implicit ee: ExecutionEnv) extends Specification with AroundTimeou
     }
 
     // FIXME: Is this an issue with thread synchronization?
-    while (reported == null) Thread.`yield`()
+    while (reported eq null) Thread.`yield`()
 
     ((throw reported): Int).must(throwA(ExampleError))
   }
@@ -308,6 +323,14 @@ class RTSSpec(implicit ee: ExecutionEnv) extends Specification with AroundTimeou
         acc.attempt[Throwable].toUnit
       }
     ).must_===(())
+
+  def testDeepAbsolveAttemptIsIdentity: MatchResult[Int] =
+    unsafePerformIO((0 until 1000).foldLeft(IO.point[Int, Int](42))((acc, _) => IO.absolve(acc.attempt))) must_=== 42
+
+  def testDeepAsyncAbsolveAttemptIsIdentity: MatchResult[Int] =
+    unsafePerformIO(
+      (0 until 1000).foldLeft(IO.async[Int, Int](k => k(ExitResult.Completed(42))))((acc, _) => IO.absolve(acc.attempt))
+    ) must_=== 42
 
   def testDeepBindOfAsyncChainIsStackSafe: MatchResult[Int] = {
     val result = 0.until(10000).foldLeft(IO.point[Throwable, Int](0)) { (acc, _) =>
