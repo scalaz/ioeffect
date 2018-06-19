@@ -2,8 +2,13 @@
 package scalaz
 package ioeffect
 
-trait IOInstances {
-  implicit def IOInstances[E]: MonadError[IO[E, ?], E] with BindRec[IO[E, ?]] with Bifunctor[IO] =
+trait IOInstances extends IOInstances1 {
+  // cached for efficiency
+  implicit val taskInstances: MonadError[Task, Throwable] with BindRec[Task] = new IOMonadError[Throwable]
+}
+
+sealed trait IOInstances1 {
+  implicit def ioInstances[E]: MonadError[IO[E, ?], E] with BindRec[IO[E, ?]] with Bifunctor[IO] =
     new IOMonadError[E] with IOBifunctor
 }
 
