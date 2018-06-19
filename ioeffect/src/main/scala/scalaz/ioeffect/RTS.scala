@@ -49,13 +49,11 @@ trait RTS {
    */
   final def accursedConversionToFuture[E, A](io: IO[E, A]): concurrent.Future[E \/ A] = {
     val p = concurrent.Promise[E \/ A] // we must store the information associated with E in \/
-    unsafePerformIOAsync(io.attempt[Throwable])(
-      _ match {
-        case ExitResult.Completed(a)  => p.success(a)
-        case ExitResult.Failed(e)     => p.failure(e)
-        case ExitResult.Terminated(t) => p.failure(t)
-      }
-    )
+    unsafePerformIOAsync(io.attempt[Throwable])({
+      case ExitResult.Completed(a)  => p.success(a)
+      case ExitResult.Failed(e)     => p.failure(e)
+      case ExitResult.Terminated(t) => p.failure(t)
+    })
     p.future
   }
 
