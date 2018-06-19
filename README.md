@@ -63,7 +63,7 @@ import java.io.IOException
 object MyApp extends SafeApp {
 
   def run(args: List[String]): IO[Void, ExitStatus] =
-    myAppLogic.attempt.map(_.fold(_ => 1)(_ => 0)).map(ExitStatus.ExitNow(_))
+    myAppLogic.attempt.map(_.fold(_ => 1, _ => 0)).map(ExitStatus.ExitNow(_))
 
   def myAppLogic: IO[IOException, Unit] =
     for {
