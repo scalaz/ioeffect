@@ -77,7 +77,8 @@ object ProjectPlugin extends AutoPlugin {
         "-Ypartial-unification",
         "-Xlog-free-terms",
         "-Xlog-free-types",
-        "-Xlog-reflective-calls"
+        "-Xlog-reflective-calls",
+        "-language:higherKinds"
       ),
       scalacOptions ++= extraScalacOptions(scalaVersion.value),
       // WORKAROUND https://github.com/ghik/silencer/issues/7
