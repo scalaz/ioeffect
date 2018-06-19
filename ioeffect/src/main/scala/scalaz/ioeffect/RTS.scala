@@ -58,6 +58,20 @@ trait RTS {
   }
 
   /**
+   * WARNING: UNSAFE, see comments on `unsafeToFuture`.
+   * Customised to `Task`.
+   */
+  final def unsafeTaskToFuture[A](io: Task[A]): concurrent.Future[A] = {
+    val p = concurrent.Promise[A]
+    unsafePerformIOAsync(io)({
+      case ExitResult.Completed(a)  => val _ = p.success(a)
+      case ExitResult.Failed(e)     => val _ = p.failure(e)
+      case ExitResult.Terminated(t) => val _ = p.failure(t)
+    })
+    p.future
+  }
+
+  /**
    * Effectfully interprets an `IO`, blocking if necessary to obtain the result.
    */
   final def tryUnsafePerformIO[E, A](io: IO[E, A]): ExitResult[E, A] = {
