@@ -338,7 +338,7 @@ class RTSSpec(implicit ee: ExecutionEnv) extends Specification with AroundTimeou
         n =>
           IO.async[Throwable, Int](
             _(ExitResult.Completed[Throwable, Int](n + 1))
-        )
+          )
       )
     }
 
