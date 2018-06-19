@@ -15,7 +15,9 @@ object ProjectKeys {
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.2.4")
 
   def SemanticDB =
-    addCompilerPlugin(scalafixSemanticdb)
+    addCompilerPlugin(
+      ("org.scalameta" % "semanticdb-scalac" % "4.0.0-M3").cross(CrossVersion.full)
+    )
 
   private val silencerVersion = "0.6"
   def Silencer =
@@ -52,7 +54,7 @@ object ProjectPlugin extends AutoPlugin {
   override def buildSettings =
     Seq(
       organization := "org.scalaz",
-      crossScalaVersions := Seq("2.12.4", "2.11.12"),
+      crossScalaVersions := Seq("2.12.6", "2.11.12"),
       scalaVersion := crossScalaVersions.value.head,
       sonatypeGithost := (Github, "scalaz", "ioeffect"),
       sonatypeDevelopers := List("John de Goes"),
@@ -84,7 +86,7 @@ object ProjectPlugin extends AutoPlugin {
       // WORKAROUND https://github.com/ghik/silencer/issues/7
       scalacOptions -= "-Ywarn-dead-code",
       libraryDependencies ++= Seq(
-        "org.scalaz" %% "scalaz-core"          % "7.2.23",
+        "org.scalaz" %% "scalaz-core"          % "7.2.24",
         "org.specs2" %% "specs2-core"          % specs2Version % "test",
         "org.specs2" %% "specs2-matcher-extra" % specs2Version % "test"
       )
