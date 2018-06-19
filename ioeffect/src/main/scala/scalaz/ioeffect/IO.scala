@@ -3,11 +3,13 @@ package scalaz.ioeffect
 
 import scala.annotation.switch
 import scala.concurrent.duration._
-import scalaz.{ -\/, \/, \/-, Maybe }
+import scalaz.{ -\/, \/, \/-, unused, Maybe }
 import scalaz.syntax.either._
 import scalaz.ioeffect.Errors._
 import scalaz.ioeffect.Errors.TerminatedException
 import scalaz.Liskov.<~<
+
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * An `IO[E, A]` ("Eye-Oh of Eeh Aye") is an immutable data structure that
@@ -134,8 +136,10 @@ sealed abstract class IO[E, A] { self =>
    * then the action will be terminated with some error.
    */
   final def race(that: IO[E, A]): IO[E, A] =
-    raceWith(that)((a, fiber) => fiber.interrupt(LostRace(\/-(fiber))).const(a),
-                   (a, fiber) => fiber.interrupt(LostRace(-\/(fiber))).const(a))
+    raceWith(that)(
+      (a, fiber) => fiber.interrupt(LostRace(\/-(fiber))).const(a),
+      (a, fiber) => fiber.interrupt(LostRace(-\/(fiber))).const(a)
+    )
 
   /**
    * Races this action with the specified action, invoking the
@@ -168,10 +172,14 @@ sealed abstract class IO[E, A] { self =>
    * Widens the error type to any supertype. While `leftMap` suffices for this
    * purpose, this method is significantly faster for this purpose.
    */
-  final def widen[E2](implicit ev: E <~< E2): IO[E2, A] = {
-    val _ = ev
+  final def widenError[E2](implicit @unused ev: E <~< E2): IO[E2, A] =
     self.asInstanceOf[IO[E2, A]]
-  }
+
+  /**
+   * Widens the type to any supertype more efficiently than `map(identity)`.
+   */
+  final def widen[A2](implicit @unused ev: A <~< A2): IO[E, A2] =
+    self.asInstanceOf[IO[E, A2]]
 
   /**
    * Executes this action, capturing both failure and success and returning
@@ -274,7 +282,7 @@ sealed abstract class IO[E, A] { self =>
           case ExitResult.Failed(_)     => release(a)
           case ExitResult.Terminated(_) => release(a)
           case _                        => IO.unit
-      }
+        }
     )(use)
 
   /**
@@ -289,7 +297,7 @@ sealed abstract class IO[E, A] { self =>
             case ExitResult.Failed(e)     => cleanup(e.right)
             case ExitResult.Terminated(e) => cleanup(e.left)
             case _                        => IO.unit
-        }
+          }
       )(_ => self)
 
   /**
@@ -498,6 +506,12 @@ sealed abstract class IO[E, A] { self =>
   final def run[E2]: IO[E2, ExitResult[E, A]] = new IO.Run(self)
 
   /**
+   * Fold errors and values to some `B`, resuming with `IO[Void, B]`
+   */
+  final def fold[B](f: E => B, g: A => B): IO[Void, B] =
+    self.attempt[Void].map(_.fold(f, g))
+
+  /**
    * An integer that identifies the term in the `IO` sum type to which this
    * instance belongs (e.g. `IO.Tags.Point`).
    */
@@ -563,11 +577,12 @@ object IO extends IOInstances {
     override def tag: Int = Tags.Fork
   }
 
-  final class Race[E, A0, A1, A] private[IO] (val left: IO[E, A0],
-                                              val right: IO[E, A1],
-                                              val finishLeft: (A0, Fiber[E, A1]) => IO[E, A],
-                                              val finishRight: (A1, Fiber[E, A0]) => IO[E, A])
-      extends IO[E, A] {
+  final class Race[E, A0, A1, A] private[IO] (
+    val left: IO[E, A0],
+    val right: IO[E, A1],
+    val finishLeft: (A0, Fiber[E, A1]) => IO[E, A],
+    val finishRight: (A1, Fiber[E, A0]) => IO[E, A]
+  ) extends IO[E, A] {
     override def tag: Int = Tags.Race
   }
 
@@ -575,10 +590,11 @@ object IO extends IOInstances {
     override def tag: Int = Tags.Suspend
   }
 
-  final class Bracket[E, A, B] private[IO] (val acquire: IO[E, A],
-                                            val release: (ExitResult[E, B], A) => IO[Void, Unit],
-                                            val use: A => IO[E, B])
-      extends IO[E, B] {
+  final class Bracket[E, A, B] private[IO] (
+    val acquire: IO[E, A],
+    val release: (ExitResult[E, B], A) => IO[Void, Unit],
+    val use: A => IO[E, B]
+  ) extends IO[E, B] {
     override def tag: Int = Tags.Bracket
   }
 
@@ -768,6 +784,27 @@ object IO extends IOInstances {
   final def require[E, A](error: E): IO[E, Maybe[A]] => IO[E, A] =
     (io: IO[E, Maybe[A]]) => io.flatMap(_.cata(IO.now[E, A](_), IO.fail[E, A](error)))
 
+  /**
+   * Convert from Future (lifted into IO eagerly via `now`, or delayed via
+   * `point`) to a `Task`. Futures are inefficient and unsafe: this is provided
+   * only as a convenience for integrating with legacy systems.
+   */
+  final def fromFuture[E, A](io: Task[Future[A]])(implicit ec: ExecutionContext): Task[A] =
+    io.attempt.flatMap { f =>
+      IO.async { cb =>
+        f.fold(
+          t => cb(ExitResult.Failed(t)),
+          _.onComplete(
+            t =>
+              cb(t match {
+                case scala.util.Success(a) => ExitResult.Completed(a)
+                case scala.util.Failure(t) => ExitResult.Failed(t)
+              })
+          )
+        )
+      }
+    }
+
   // TODO: Make this fast, generalize from `Unit` to `A: Semigroup`,
   // and use `IList` instead of `List`.
   def forkAll[E2](l: List[IO[E2, Unit]]): IO[E2, Unit] = l match {
@@ -777,7 +814,7 @@ object IO extends IOInstances {
 
   private final val Never: IO[Nothing, Any] =
     IO.async[Nothing, Any] { (k: (ExitResult[Nothing, Any]) => Unit) =>
-      }
+    }
 
   private final val Unit: IO[Nothing, Unit] = now(())
 }

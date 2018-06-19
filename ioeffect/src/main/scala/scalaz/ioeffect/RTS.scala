@@ -4,12 +4,13 @@ package scalaz.ioeffect
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.{ Executors, TimeUnit }
 
-import scalaz.{ -\/, \/- }
+import scalaz.{ -\/, \/, \/- }
 
 import scala.annotation.{ switch, tailrec }
 import scala.concurrent.duration.Duration
 import java.util.concurrent.{ ExecutorService, ScheduledExecutorService }
-import scalaz.ioeffect.RTS.FiberStatus.Executing
+
+import scala.concurrent
 
 /**
  * This trait provides a high-performance implementation of a runtime system for
@@ -40,6 +41,20 @@ trait RTS {
       case Async.Now(v) => k(v)
       case _            =>
     }
+  }
+
+  /**
+   * WARNING: UNSAFE - convert between IO[?, A] and Future - do not use this method.
+   * Seriously, try not to.
+   */
+  final def unsafeToFuture[E, A](io: IO[E, A]): concurrent.Future[E \/ A] = {
+    val p = concurrent.Promise[E \/ A] // we must store the information associated with E in \/
+    unsafePerformIOAsync(io.attempt[Throwable])({
+      case ExitResult.Completed(a)  => val _ = p.success(a)
+      case ExitResult.Failed(e)     => val _ = p.failure(e)
+      case ExitResult.Terminated(t) => val _ = p.failure(t)
+    })
+    p.future
   }
 
   /**
@@ -1168,16 +1183,18 @@ private object RTS {
   object FiberStatus {
     final case class Executing[E, A](joiners: List[Callback[E, A]], killers: List[Callback[E, Unit]])
         extends FiberStatus[E, A]
-    final case class Interrupting[E, A](error: Throwable,
-                                        joiners: List[Callback[E, A]],
-                                        killers: List[Callback[E, Unit]])
-        extends FiberStatus[E, A]
-    final case class AsyncRegion[E, A](reentrancy: Int,
-                                       resume: Int,
-                                       cancel: Option[Throwable => Unit],
-                                       joiners: List[Callback[E, A]],
-                                       killers: List[Callback[E, Unit]])
-        extends FiberStatus[E, A]
+    final case class Interrupting[E, A](
+      error: Throwable,
+      joiners: List[Callback[E, A]],
+      killers: List[Callback[E, Unit]]
+    ) extends FiberStatus[E, A]
+    final case class AsyncRegion[E, A](
+      reentrancy: Int,
+      resume: Int,
+      cancel: Option[Throwable => Unit],
+      joiners: List[Callback[E, A]],
+      killers: List[Callback[E, Unit]]
+    ) extends FiberStatus[E, A]
     final case class Done[E, A](value: ExitResult[E, A]) extends FiberStatus[E, A]
 
     def Initial[E, A]: Executing[E, A] = Executing[E, A](Nil, Nil)
