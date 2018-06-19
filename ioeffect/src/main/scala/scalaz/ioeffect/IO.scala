@@ -10,7 +10,6 @@ import scalaz.ioeffect.Errors.TerminatedException
 import scalaz.Liskov.<~<
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
 
 /**
  * An `IO[E, A]` ("Eye-Oh of Eeh Aye") is an immutable data structure that
