@@ -10,6 +10,7 @@ import scalaz.ioeffect.Errors.TerminatedException
 import scalaz.Liskov.<~<
 
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 /**
  * An `IO[E, A]` ("Eye-Oh of Eeh Aye") is an immutable data structure that
@@ -787,12 +788,10 @@ object IO extends IOInstances {
           _.absurd[Unit],
           _.onComplete(
             t =>
-              cb(
-                t.fold(
-                  ExitResult.Failed.apply,
-                  ExitResult.Completed.apply
-                )
-            )
+              cb(t match {
+                case Success(a) => ExitResult.Completed(a)
+                case Failure(t) => ExitResult.Failed(t)
+              })
           )
         )
       }
