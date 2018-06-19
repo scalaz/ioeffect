@@ -784,11 +784,15 @@ object IO extends IOInstances {
   final def fromFuture[E, A](io: IO[Void, Future[A]])(implicit ec: ExecutionContext): IO[Throwable, A] =
     io.attempt[Throwable].flatMap { f =>
       IO.async { cb =>
-        f.map(
+        f.fold(
+          _.absurd[Unit],
           _.onComplete(
             t =>
               cb(
-                t.fold(ExitResult.Failed.apply, ExitResult.Completed.apply)
+                t.fold(
+                  ExitResult.Failed.apply,
+                  ExitResult.Completed.apply
+                )
             )
           )
         )
