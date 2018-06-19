@@ -98,7 +98,7 @@ class RTSSpec(implicit ee: ExecutionEnv) extends Specification with AroundTimeou
 
     val result: IO[RuntimeException, String] = for {
       r1 <- op1
-      r2 <- op2.widen[RuntimeException]
+      r2 <- op2.widenError[RuntimeException]
     } yield r1 + r2
 
     unsafePerformIO(result) must_=== "12"
