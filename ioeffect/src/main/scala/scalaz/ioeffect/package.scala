@@ -2,6 +2,7 @@
 
 package scalaz
 
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration.Duration
 
 import scalaz.Tags.Parallel
@@ -26,6 +27,8 @@ package object ioeffect {
 
     final def unit: Task[Unit]                      = IO.unit
     final def sleep(duration: Duration): Task[Unit] = IO.sleep(duration)
+
+    final def fromFuture[E, A](io: Task[Future[A]])(implicit ec: ExecutionContext): Task[A] = IO.fromFuture(io)
   }
 
   type Unexceptional[A] = IO[Void, A]
