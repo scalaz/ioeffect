@@ -3,11 +3,12 @@ package scalaz.ioeffect
 
 import scala.annotation.switch
 import scala.concurrent.duration._
-import scalaz.{ -\/, \/, \/-, unused, Maybe }
+import scalaz.{ -\/, @@, \/, \/-, unused, Maybe }
 import scalaz.syntax.either._
 import scalaz.ioeffect.Errors._
 import scalaz.ioeffect.Errors.TerminatedException
 import scalaz.Liskov.<~<
+import scalaz.Tags.Parallel
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -519,6 +520,8 @@ sealed abstract class IO[E, A] { self =>
 }
 
 object IO extends IOInstances {
+  type Par[e, a] = IO[e, a] @@ Parallel
+
   final object Tags {
     final val FlatMap         = 0
     final val Point           = 1
@@ -687,6 +690,11 @@ object IO extends IOInstances {
   final def sync[E, A](effect: => A): IO[E, A] = new SyncEffect(() => effect)
 
   /**
+   * To ease migration.
+   */
+  final def apply[E, A](effect: => A): IO[E, A] = sync(effect)
+
+  /**
    *
    * Imports a synchronous effect into a pure `IO` value, translating any
    * throwables into a `Throwable` failure in the returned value.
@@ -789,7 +797,7 @@ object IO extends IOInstances {
    * `point`) to a `Task`. Futures are inefficient and unsafe: this is provided
    * only as a convenience for integrating with legacy systems.
    */
-  final def fromFuture[E, A](io: Task[Future[A]])(implicit ec: ExecutionContext): Task[A] =
+  final def fromFuture[E, A](io: Task[Future[A]])(ec: ExecutionContext): Task[A] =
     io.attempt.flatMap { f =>
       IO.async { cb =>
         f.fold(
@@ -800,7 +808,7 @@ object IO extends IOInstances {
                 case scala.util.Success(a) => ExitResult.Completed(a)
                 case scala.util.Failure(t) => ExitResult.Failed(t)
               })
-          )
+          )(ec)
         )
       }
     }
