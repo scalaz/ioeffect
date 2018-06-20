@@ -3,11 +3,12 @@ package scalaz.ioeffect
 
 import scala.annotation.switch
 import scala.concurrent.duration._
-import scalaz.{ -\/, \/, \/-, unused, Maybe }
+import scalaz.{ -\/, @@, \/, \/-, unused, Maybe }
 import scalaz.syntax.either._
 import scalaz.ioeffect.Errors._
 import scalaz.ioeffect.Errors.TerminatedException
 import scalaz.Liskov.<~<
+import scalaz.Tags.Parallel
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -519,6 +520,8 @@ sealed abstract class IO[E, A] { self =>
 }
 
 object IO extends IOInstances {
+  type Par[e, a] = IO[e, a] @@ Parallel
+
   final object Tags {
     final val FlatMap         = 0
     final val Point           = 1
