@@ -14,6 +14,7 @@ package object ioeffect {
   object Task {
     final def now[A](effect: A): Task[A]                                              = IO.now(effect)
     final def point[A](effect: => A): Task[A]                                         = IO.point(effect)
+    final def apply[A](effect: => A): Task[A]                                         = IO.apply(effect)
     final def sync[A](effect: => A): Task[A]                                          = IO.sync(effect)
     final def async[A](register: (ExitResult[Throwable, A] => Unit) => Unit): Task[A] = IO.async(register)
 
