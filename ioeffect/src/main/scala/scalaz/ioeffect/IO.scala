@@ -797,7 +797,7 @@ object IO extends IOInstances {
    * `point`) to a `Task`. Futures are inefficient and unsafe: this is provided
    * only as a convenience for integrating with legacy systems.
    */
-  final def fromFuture[E, A](io: Task[Future[A]])(implicit ec: ExecutionContext): Task[A] =
+  final def fromFuture[E, A](io: Task[Future[A]])(ec: ExecutionContext): Task[A] =
     io.attempt.flatMap { f =>
       IO.async { cb =>
         f.fold(
@@ -808,7 +808,7 @@ object IO extends IOInstances {
                 case scala.util.Success(a) => ExitResult.Completed(a)
                 case scala.util.Failure(t) => ExitResult.Failed(t)
               })
-          )
+          )(ec)
         )
       }
     }

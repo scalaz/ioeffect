@@ -1,5 +1,7 @@
 package scalaz.ioeffect
 
+import scala.concurrent.ExecutionContext
+
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.specification.AroundTimeout
@@ -10,7 +12,8 @@ import Scalaz._
 
 import scala.concurrent.Future
 
-class IOTest(implicit ee: ExecutionEnv) extends Specification with AroundTimeout with RTS {
+class IOTest(ee: ExecutionEnv) extends Specification with AroundTimeout with RTS {
+  val ec: ExecutionContext = ee.ec
 
   override def defaultHandler[E]: Throwable => IO[E, Unit] = _ => IO.unit[E]
 
@@ -26,19 +29,19 @@ class IOTest(implicit ee: ExecutionEnv) extends Specification with AroundTimeout
       """
 
   def fromFutureSpecIONowSuccessful: MatchResult[Int] =
-    unsafePerformIO(IO.fromFuture(IO.now(Future.successful(1)))) must_===
+    unsafePerformIO(IO.fromFuture(IO.now(Future.successful(1)))(ec)) must_===
       unsafePerformIO(IO.now[Throwable, Int](1))
 
   def fromFutureSpecIONowApply: MatchResult[Int] =
-    unsafePerformIO(IO.fromFuture(IO.now(Future(1)))) must_===
+    unsafePerformIO(IO.fromFuture(IO.now(Future(1)(ec)))(ec)) must_===
       unsafePerformIO(IO.now[Throwable, Int](1))
 
   def fromFutureSpecIOPointSuccessful: MatchResult[Int] =
-    unsafePerformIO(IO.fromFuture(IO.point(Future.successful(1)))) must_===
+    unsafePerformIO(IO.fromFuture(IO.point(Future.successful(1)))(ec)) must_===
       unsafePerformIO(IO.now[Throwable, Int](1))
 
   def fromFutureSpecIOPointApply: MatchResult[Int] =
-    unsafePerformIO(IO.fromFuture(IO.point(Future(1)))) must_===
+    unsafePerformIO(IO.fromFuture(IO.point(Future(1)(ec)))(ec)) must_===
       unsafePerformIO(IO.now[Throwable, Int](1))
 
   def unsafeToFutureSpec: MatchResult[Future[Throwable \/ Int]] =

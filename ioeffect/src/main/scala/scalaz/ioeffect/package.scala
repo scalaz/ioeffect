@@ -28,7 +28,7 @@ package object ioeffect {
     final def unit: Task[Unit]                      = IO.unit
     final def sleep(duration: Duration): Task[Unit] = IO.sleep(duration)
 
-    final def fromFuture[E, A](io: Task[Future[A]])(implicit ec: ExecutionContext): Task[A] = IO.fromFuture(io)
+    final def fromFuture[E, A](io: Task[Future[A]])(ec: ExecutionContext): Task[A] = IO.fromFuture(io)(ec)
   }
 
   type Unexceptional[A] = IO[Void, A]
