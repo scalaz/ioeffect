@@ -690,11 +690,6 @@ object IO extends IOInstances {
   final def sync[E, A](effect: => A): IO[E, A] = new SyncEffect(() => effect)
 
   /**
-   * To ease migration.
-   */
-  final def apply[E, A](effect: => A): IO[E, A] = sync(effect)
-
-  /**
    *
    * Imports a synchronous effect into a pure `IO` value, translating any
    * throwables into a `Throwable` failure in the returned value.
