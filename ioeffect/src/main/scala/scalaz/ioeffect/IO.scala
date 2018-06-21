@@ -699,9 +699,12 @@ object IO extends IOInstances {
    * }}}
    */
   final def syncThrowable[A](effect: => A): IO[Throwable, A] =
-    syncCatch(effect) {
-      case t: Throwable => t
-    }
+    IO.absolve(
+      IO.sync(
+        try effect.right
+        catch { case t: Throwable => t.left }
+      )
+    )
 
   /**
    *
