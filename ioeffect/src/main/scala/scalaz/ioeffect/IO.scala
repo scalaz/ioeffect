@@ -215,6 +215,12 @@ sealed abstract class IO[E, A] { self =>
   }
 
   /**
+   * Ignores the error and value of this IO, useful for explicitly acknowledging
+   * that a cleanup task will have its result ignored.
+   */
+  def ignore: IO[Void, Unit] = attempt[Void].toUnit
+
+  /**
    * When this action represents acquisition of a resource (for example,
    * opening a file, launching a thread, etc.), `bracket` can be used to ensure
    * the acquisition is not interrupted and the resource is released.
