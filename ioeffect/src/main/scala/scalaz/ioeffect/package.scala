@@ -5,8 +5,6 @@ package scalaz
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration.Duration
 
-import scalaz.Tags.Parallel
-
 package object ioeffect {
 
   implicit class IOVoidSyntax[A](val io: IO[Void, A]) extends AnyRef {
@@ -15,8 +13,6 @@ package object ioeffect {
 
   type Task[A] = IO[Throwable, A]
   object Task {
-    type Par[a] = Task[a] @@ Parallel
-
     final def apply[A](effect: => A): Task[A] = IO.syncThrowable(effect)
 
     final def now[A](effect: A): Task[A]                                              = IO.now(effect)
