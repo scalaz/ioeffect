@@ -16,7 +16,7 @@ object ProjectKeys {
 
   def SemanticDB =
     addCompilerPlugin(
-      ("org.scalameta" % "semanticdb-scalac" % "4.0.0-M3").cross(CrossVersion.full)
+      ("org.scalameta" % "semanticdb-scalac" % "4.0.0-M4").cross(CrossVersion.full)
     )
 
   private val silencerVersion = "0.6"
@@ -71,9 +71,9 @@ object ProjectPlugin extends AutoPlugin {
       testFrameworks in Test := Seq(TestFrameworks.Specs2, TestFrameworks.ScalaCheck, TestFrameworks.ScalaTest),
       MonadicFor,
       KindProjector,
-      SemanticDB,
+      //SemanticDB, // disabling scalafix until 0.6 stabilises
       scalacOptions ++= Seq(
-        "-Yrangepos", // needed by semanticdb
+        //"-Yrangepos", // needed by semanticdb
         "-unchecked",
         "-explaintypes",
         "-Ypartial-unification",
