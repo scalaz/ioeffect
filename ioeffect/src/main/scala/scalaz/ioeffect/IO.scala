@@ -702,12 +702,14 @@ object IO extends IOInstances {
    * }}}
    */
   final def syncThrowable[A](effect: => A): IO[Throwable, A] =
-    IO.absolve(
-      IO.sync(
-        try effect.right
-        catch { case t: Throwable => t.left }
-      )
-    )
+    IO.suspend {
+      try {
+        val a = effect
+        IO.sync(a)
+      } catch {
+        case t: Throwable => IO.fail(t)
+      }
+    }
 
   /**
    *
