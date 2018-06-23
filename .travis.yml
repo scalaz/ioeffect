@@ -3,7 +3,7 @@ jdk:
   - openjdk8
 
 script:
-  - sbt ";+check ;+cpl ;+lint ;+doc ;+test"
+  - sbt ";+check ;+cpl ;+test"
   - if [ -z "$TRAVIS_PULL_REQUEST" ] && [ "${TRAVIS_REPO_SLUG}" == "scalaz/ioeffect" ] ; then sbt publish ; fi
 
 before_cache:

@@ -3,12 +3,11 @@ package scalaz.ioeffect
 
 import scala.annotation.switch
 import scala.concurrent.duration._
-import scalaz.{ -\/, @@, \/, \/-, unused, Maybe }
+import scalaz.{ -\/, \/, \/-, unused, Maybe }
 import scalaz.syntax.either._
 import scalaz.ioeffect.Errors._
 import scalaz.ioeffect.Errors.TerminatedException
 import scalaz.Liskov.<~<
-import scalaz.Tags.Parallel
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -213,6 +212,12 @@ sealed abstract class IO[E, A] { self =>
 
     case _ => new IO.Attempt(self)
   }
+
+  /**
+   * Ignores the error and value of this IO, useful for explicitly acknowledging
+   * that a cleanup task will have its result ignored.
+   */
+  def ignore: IO[Void, Unit] = attempt[Void].toUnit
 
   /**
    * When this action represents acquisition of a resource (for example,
@@ -520,8 +525,6 @@ sealed abstract class IO[E, A] { self =>
 }
 
 object IO extends IOInstances {
-  type Par[e, a] = IO[e, a] @@ Parallel
-
   final object Tags {
     final val FlatMap         = 0
     final val Point           = 1
@@ -690,11 +693,6 @@ object IO extends IOInstances {
   final def sync[E, A](effect: => A): IO[E, A] = new SyncEffect(() => effect)
 
   /**
-   * To ease migration.
-   */
-  final def apply[E, A](effect: => A): IO[E, A] = sync(effect)
-
-  /**
    *
    * Imports a synchronous effect into a pure `IO` value, translating any
    * throwables into a `Throwable` failure in the returned value.
@@ -704,8 +702,13 @@ object IO extends IOInstances {
    * }}}
    */
   final def syncThrowable[A](effect: => A): IO[Throwable, A] =
-    syncCatch(effect) {
-      case t: Throwable => t
+    IO.suspend {
+      try {
+        val a = effect
+        IO.sync(a)
+      } catch {
+        case t: Throwable => IO.fail(t)
+      }
     }
 
   /**
