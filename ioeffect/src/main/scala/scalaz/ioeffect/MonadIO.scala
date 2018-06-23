@@ -12,12 +12,12 @@ import scalaz.Monad
  *
  * @tparam M - the monad in which to lift
  */
-trait MonadIO[M[_]] extends Monad[M] {
+trait MonadIO[M[_]] {
 
   /**
    * Lift a computation from the `IO` monad into `M`
    */
-  def liftIO[E, A](io: IO[E, A]): M[A]
+  def liftIO[E, A](io: IO[E, A])(implicit M: Monad[M]): M[A]
 
 }
 
