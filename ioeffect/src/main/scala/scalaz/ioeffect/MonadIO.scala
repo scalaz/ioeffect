@@ -23,5 +23,4 @@ trait MonadIO[M[_]] extends Monad[M] {
 
 object MonadIO {
   def apply[M[_]](implicit M: MonadIO[M]): MonadIO[M] = M
-
 }
