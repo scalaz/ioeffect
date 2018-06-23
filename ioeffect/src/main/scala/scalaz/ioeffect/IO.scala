@@ -511,15 +511,15 @@ sealed abstract class IO[E, A] { self =>
    * success (`succ`). Executes this action and based on the result executes
    * the next action, `err` or `succ`.
    */
-  final def redeem[E2, B](f: E => IO[E2, B], g: A => IO[E2, B]): IO[E2, B] =
-    self.attempt[E2].flatMap(_.fold(f, g))
+  final def redeem[E2, B](err: E => IO[E2, B], succ: A => IO[E2, B]): IO[E2, B] =
+    self.attempt[E2].flatMap(_.fold(err, succ))
 
   /**
    * Fold errors and values to some `B`, resuming with `IO[Void, B]` -
    * a slightly less powerful version of `redeem`.
    */
-  final def fold[B](f: E => B, g: A => B): IO[Void, B] =
-    self.attempt[Void].map(_.fold(f, g))
+  final def fold[E2, B](err: E => B, succ: A => B): IO[E2, B] =
+    self.attempt[E2].map(_.fold(err, succ))
 
   /**
    * An integer that identifies the term in the `IO` sum type to which this
