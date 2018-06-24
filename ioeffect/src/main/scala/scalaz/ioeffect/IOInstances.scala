@@ -2,21 +2,19 @@
 package scalaz
 package ioeffect
 
-import Tags.Parallel
-
 abstract class IOInstances extends IOInstances1 {
   // cached for efficiency
   implicit val taskInstances: MonadError[Task, Throwable] with BindRec[Task] with Plus[Task] =
     new IOMonadError[Throwable] with IOPlus[Throwable]
 
-  implicit val taskParAp: Applicative[λ[α => Task[α] @@ Parallel]] = new IOParApplicative[Throwable]
+  implicit val taskParAp: Applicative[Task.Par] = new IOParApplicative[Throwable]
 }
 
 sealed abstract class IOInstances1 extends IOInstance2 {
   implicit def ioInstances[E]: MonadError[IO[E, ?], E] with BindRec[IO[E, ?]] with Bifunctor[IO] with Plus[IO[E, ?]] =
     new IOMonadError[E] with IOPlus[E] with IOBifunctor
 
-  implicit def ioParAp[E]: Applicative[λ[α => IO[E, α] @@ Parallel]] = new IOParApplicative[E]
+  implicit def ioParAp[E]: Applicative[IO.Par[E, ?]] = new IOParApplicative[E]
 }
 
 sealed abstract class IOInstance2 {
@@ -29,6 +27,12 @@ private class IOMonad[E] extends Monad[IO[E, ?]] with BindRec[IO[E, ?]] {
   override def bind[A, B](fa: IO[E, A])(f: A => IO[E, B]): IO[E, B] = fa.flatMap(f)
   override def tailrecM[A, B](f: A => IO[E, A \/ B])(a: A): IO[E, B] =
     f(a).flatMap(_.fold(tailrecM(f), point(_)))
+
+  // backport https://github.com/scalaz/scalaz/pull/1894
+  override def apply2[A, B, C](fa: => IO[E, A], fb: => IO[E, B])(f: (A, B) => C): IO[E, C] = {
+    val fb0 = Need(fb)
+    bind(fa)(a => map(fb0.value)(b => f(a, b)))
+  }
 }
 
 private class IOMonadError[E] extends IOMonad[E] with MonadError[IO[E, ?], E] {
@@ -51,21 +55,19 @@ private trait IOBifunctor extends Bifunctor[IO] {
     IO.absolve(fab.attempt.map(_.bimap(f, g)))
 }
 
-private class IOParApplicative[E] extends Applicative[λ[α => IO[E, α] @@ Parallel]] {
-  type Par[α] = IO[E, α] @@ Parallel
-
-  override def point[A](a: => A): Par[A] = Tag(IO.point(a))
-  override def ap[A, B](fa: => Par[A])(f: => Par[A => B]): Par[B] = {
+private class IOParApplicative[E] extends Applicative[IO.Par[E, ?]] {
+  override def point[A](a: => A): IO.Par[E, A] = Tag(IO.point(a))
+  override def ap[A, B](fa: => IO.Par[E, A])(f: => IO.Par[E, A => B]): IO.Par[E, B] = {
     lazy val fa0: IO[E, A] = Tag.unwrap(fa)
     Tag(Tag.unwrap(f).flatMap(x => fa0.map(x)))
   }
 
-  override def map[A, B](fa: Par[A])(f: A => B): Par[B] =
+  override def map[A, B](fa: IO.Par[E, A])(f: A => B): IO.Par[E, B] =
     Tag(Tag.unwrap(fa).map(f))
 
   override def apply2[A, B, C](
-    fa: => Par[A],
-    fb: => Par[B]
-  )(f: (A, B) => C): Par[C] =
+    fa: => IO.Par[E, A],
+    fb: => IO.Par[E, B]
+  )(f: (A, B) => C): IO.Par[E, C] =
     Tag(Tag.unwrap(fa).par(Tag.unwrap(fb)).map(f.tupled))
 }
