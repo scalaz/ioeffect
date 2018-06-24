@@ -2,21 +2,19 @@
 package scalaz
 package ioeffect
 
-import Tags.Parallel
-
 abstract class IOInstances extends IOInstances1 {
   // cached for efficiency
   implicit val taskInstances: MonadError[Task, Throwable] with BindRec[Task] with Plus[Task] =
     new IOMonadError[Throwable] with IOPlus[Throwable]
 
-  implicit val taskParAp: Applicative[λ[α => Task[α] @@ Parallel]] = new IOParApplicative[Throwable]
+  implicit val taskParAp: Applicative[Task.Par] = new IOParApplicative[Throwable]
 }
 
 sealed abstract class IOInstances1 extends IOInstance2 {
   implicit def ioInstances[E]: MonadError[IO[E, ?], E] with BindRec[IO[E, ?]] with Bifunctor[IO] with Plus[IO[E, ?]] =
     new IOMonadError[E] with IOPlus[E] with IOBifunctor
 
-  implicit def ioParAp[E]: Applicative[λ[α => IO[E, α] @@ Parallel]] = new IOParApplicative[E]
+  implicit def ioParAp[E]: Applicative[IO.Par[E, ?]] = new IOParApplicative[E]
 }
 
 sealed abstract class IOInstance2 {
@@ -51,21 +49,19 @@ private trait IOBifunctor extends Bifunctor[IO] {
     IO.absolve(fab.attempt.map(_.bimap(f, g)))
 }
 
-private class IOParApplicative[E] extends Applicative[λ[α => IO[E, α] @@ Parallel]] {
-  type Par[α] = IO[E, α] @@ Parallel
-
-  override def point[A](a: => A): Par[A] = Tag(IO.point(a))
-  override def ap[A, B](fa: => Par[A])(f: => Par[A => B]): Par[B] = {
+private class IOParApplicative[E] extends Applicative[IO.Par[E, ?]] {
+  override def point[A](a: => A): IO.Par[E, A] = Tag(IO.point(a))
+  override def ap[A, B](fa: => IO.Par[E, A])(f: => IO.Par[E, A => B]): IO.Par[E, B] = {
     lazy val fa0: IO[E, A] = Tag.unwrap(fa)
     Tag(Tag.unwrap(f).flatMap(x => fa0.map(x)))
   }
 
-  override def map[A, B](fa: Par[A])(f: A => B): Par[B] =
+  override def map[A, B](fa: IO.Par[E, A])(f: A => B): IO.Par[E, B] =
     Tag(Tag.unwrap(fa).map(f))
 
   override def apply2[A, B, C](
-    fa: => Par[A],
-    fb: => Par[B]
-  )(f: (A, B) => C): Par[C] =
+    fa: => IO.Par[E, A],
+    fb: => IO.Par[E, B]
+  )(f: (A, B) => C): IO.Par[E, C] =
     Tag(Tag.unwrap(fa).par(Tag.unwrap(fb)).map(f.tupled))
 }
