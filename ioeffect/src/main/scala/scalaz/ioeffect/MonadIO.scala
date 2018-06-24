@@ -1,6 +1,8 @@
 package scalaz.ioeffect
 
 import scalaz.Monad
+import scalaz._
+import Scalaz._
 
 /***
  * Monads in which `IO` computations may be embedded. Any monad built by applying a sequence of
@@ -12,15 +14,33 @@ import scalaz.Monad
  *
  * @tparam M - the monad in which to lift
  */
-trait MonadIO[M[_]] {
+trait MonadIO[M[_], E] {
 
   /**
    * Lift a computation from the `IO` monad into `M`
    */
-  def liftIO[E, A](io: IO[E, A])(implicit M: Monad[M]): M[A]
+  def liftIO[A](io: IO[E, A])(implicit M: Monad[M]): M[A]
+
+  trait MonadIOLaw {
+
+    /** Lifted `point` is a no-op. */
+    def rightIdentity[F[_], E, A](
+      a: A,
+      io: IO[E, A]
+    )(implicit FA: Equal[F[A]], F: MonadIO[F, E], FM: Monad[F]): Boolean =
+      FA.equal(a.pure[F], F.liftIO(IO.now(a)))
+
+    /** Lifted `f` applied to pure `a` is just `f(a)`. */
+    def distributivity[F[_], E, A, B](
+      f: A => IO[E, B],
+      io: IO[E, A]
+    )(implicit FB: Equal[F[B]], F: MonadIO[F, E], FM: Monad[F]): Boolean =
+      FB.equal(F.liftIO(io.flatMap(f)), F.liftIO(io).flatMap(a => F.liftIO(f(a))))
+  }
+  def monadIOLaw = new MonadIOLaw {}
 
 }
 
 object MonadIO {
-  def apply[M[_]](implicit M: MonadIO[M]): MonadIO[M] = M
+  def apply[M[_], E](implicit M: MonadIO[M, E]): MonadIO[M, E] = M
 }
