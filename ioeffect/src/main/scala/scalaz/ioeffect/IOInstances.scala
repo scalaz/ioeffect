@@ -27,6 +27,12 @@ private class IOMonad[E] extends Monad[IO[E, ?]] with BindRec[IO[E, ?]] {
   override def bind[A, B](fa: IO[E, A])(f: A => IO[E, B]): IO[E, B] = fa.flatMap(f)
   override def tailrecM[A, B](f: A => IO[E, A \/ B])(a: A): IO[E, B] =
     f(a).flatMap(_.fold(tailrecM(f), point(_)))
+
+  // backport https://github.com/scalaz/scalaz/pull/1894
+  override def apply2[A, B, C](fa: => IO[E, A], fb: => IO[E, B])(f: (A, B) => C): IO[E, C] = {
+    val fb0 = Need(fb)
+    bind(fa)(a => map(fb0.value)(b => f(a, b)))
+  }
 }
 
 private class IOMonadError[E] extends IOMonad[E] with MonadError[IO[E, ?], E] {
