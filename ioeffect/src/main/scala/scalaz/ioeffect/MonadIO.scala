@@ -13,6 +13,7 @@ import Scalaz._
  * liftIO (m >>= f) = liftIO m >>= (liftIO . f)
  *
  * @tparam M - the monad in which to lift
+ * @tparam E - the Error dependency corresponding with the IO to be lifted
  */
 trait MonadIO[M[_], E] {
 
@@ -43,4 +44,13 @@ trait MonadIO[M[_], E] {
 
 object MonadIO {
   def apply[M[_], E](implicit M: MonadIO[M, E]): MonadIO[M, E] = M
+
+  import Isomorphism._
+
+  def fromIso[F[_], G[_], E](D: F <~> G)(implicit E: MonadIO[G, E], M1: Monad[G]): MonadIO[F, E] =
+    new IsomorphismMonadIO[F, G, E] {
+      override def G: MonadIO[G, E] = E
+      override def M: Monad[G]      = M1
+      override def iso: F <~> G     = D
+    }
 }

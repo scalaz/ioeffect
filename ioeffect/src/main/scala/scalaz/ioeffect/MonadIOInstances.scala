@@ -8,24 +8,6 @@ sealed abstract class MonadIOInstances extends MonadIOInstances1 {
   implicit val taskMonadIO: MonadIO[Task, Throwable] = new MonadIO[Task, Throwable] {
     override def liftIO[A](io: IO[Throwable, A])(implicit M: Monad[Task]): Task[A] = io
   }
-}
-
-sealed abstract class MonadIOInstances1 extends MonadIOInstances2 {
-
-  implicit def ioMonadIO[E]: MonadIO[IO[E, ?], E] = new MonadIO[IO[E, ?], E] {
-    override def liftIO[A](io: IO[E, A])(implicit M: Monad[IO[E, ?]]): IO[E, A] = io
-  }
-}
-
-sealed abstract class MonadIOInstances2 {
-  import Isomorphism._
-
-  def fromIso[F[_], G[_], E](D: F <~> G)(implicit E: MonadIO[G, E], M1: Monad[G]): MonadIO[F, E] =
-    new IsomorphismMonadIO[F, G, E] {
-      override def G: MonadIO[G, E] = E
-      override def M: Monad[G]      = M1
-      override def iso: F <~> G     = D
-    }
 
   implicit def identityTMonadIO[M[_], E](implicit M: MonadIO[M, E], M1: Monad[M]): MonadIO[IdT[M, ?], E] =
     new MonadIO[IdT[M, ?], E] {
@@ -78,6 +60,13 @@ sealed abstract class MonadIOInstances2 {
         TheseT(F.liftIO(io).map(\&/.That.apply))
     }
 
+}
+
+sealed abstract class MonadIOInstances1 {
+
+  implicit def ioMonadIO[E]: MonadIO[IO[E, ?], E] = new MonadIO[IO[E, ?], E] {
+    override def liftIO[A](io: IO[E, A])(implicit M: Monad[IO[E, ?]]): IO[E, A] = io
+  }
 }
 
 abstract class IsomorphismMonadIO[F[_], G[_], E] extends MonadIO[F, E] {
