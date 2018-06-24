@@ -25,18 +25,15 @@ trait MonadIO[M[_], E] {
   trait MonadIOLaw {
 
     /** Lifted `point` is a no-op. */
-    def rightIdentity[F[_], E, A](
-      a: A,
-      io: IO[E, A]
-    )(implicit FA: Equal[F[A]], F: MonadIO[F, E], FM: Monad[F]): Boolean =
-      FA.equal(a.pure[F], F.liftIO(IO.now(a)))
+    def rightIdentity[A](a: A)(implicit MA: Equal[M[A]], M: MonadIO[M, E], MM: Monad[M]): Boolean =
+      MA.equal(a.pure[M], M.liftIO(IO.now(a)))
 
     /** Lifted `f` applied to pure `a` is just `f(a)`. */
-    def distributivity[F[_], E, A, B](
+    def distributivity[A, B](
       f: A => IO[E, B],
       io: IO[E, A]
-    )(implicit FB: Equal[F[B]], F: MonadIO[F, E], FM: Monad[F]): Boolean =
-      FB.equal(F.liftIO(io.flatMap(f)), F.liftIO(io).flatMap(a => F.liftIO(f(a))))
+    )(implicit MB: Equal[M[B]], M: MonadIO[M, E], MM: Monad[M]): Boolean =
+      MB.equal(M.liftIO(io.flatMap(f)), M.liftIO(io).flatMap(a => M.liftIO(f(a))))
   }
   def monadIOLaw = new MonadIOLaw {}
 
