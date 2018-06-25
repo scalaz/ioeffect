@@ -531,8 +531,7 @@ sealed abstract class IO[E, A] { self =>
    * into F if there is a monadIO instance for F
    *
    */
-  final def liftIO[F[_]](implicit M: Monad[F], MM: MonadIO[F, E]): F[A] =
-    MM.liftIO(this)
+  final def liftIO[F[_]: Monad](implicit M: MonadIO[F, E]): F[A] = MM.liftIO(self)
 
   /**
    * An integer that identifies the term in the `IO` sum type to which this
