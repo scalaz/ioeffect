@@ -529,7 +529,6 @@ sealed abstract class IO[E, A] { self =>
   /**
    * For some monad F and some error type E, lift this IO
    * into F if there is a monadIO instance for F
-   *
    */
   final def liftIO[F[_]: Monad](implicit M: MonadIO[F, E]): F[A] = MM.liftIO(self)
 
