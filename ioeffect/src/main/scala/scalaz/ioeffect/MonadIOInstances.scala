@@ -4,7 +4,7 @@ package ioeffect
 import scalaz._
 import Scalaz._
 
-abstract class MonadIOInstances extends MonadIOInstances1 {
+sealed abstract class MonadIOInstances extends MonadIOInstances1 {
 
   implicit val taskMonadIO: MonadIO[Task, Throwable] = new MonadIO[Task, Throwable] {
     override def liftIO[A](io: IO[Throwable, A])(implicit M: Monad[Task]): Task[A] = io
