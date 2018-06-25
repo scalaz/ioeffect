@@ -527,10 +527,10 @@ sealed abstract class IO[E, A] { self =>
     self.attempt[E2].map(_.fold(err, succ))
 
   /**
-    * For some monad F and some error type E, lift this IO
-    * into F if there is a monadIO instance for F
-    * 
-    */
+   * For some monad F and some error type E, lift this IO
+   * into F if there is a monadIO instance for F
+   *
+   */
   final def liftIO[F[_]](implicit M: Monad[F], MM: MonadIO[F, E]): F[A] =
     MM.liftIO(this)
 
