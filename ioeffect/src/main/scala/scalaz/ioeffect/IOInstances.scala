@@ -9,7 +9,7 @@ abstract class IOInstances extends IOInstances1 {
 
   implicit val taskParAp: Applicative[Task.Par] = new IOParApplicative[Throwable]
 
-  implicit val ioUnitMonadPlus: MonadPlus[IO[Unit, ?]] with BindRec[IO[Unit, ?]] = new IOMonadPlus
+  implicit val ioUnitMonadPlus: MonadPlus[IO[Unit, ?]] with BindRec[IO[Unit, ?]] = new IOUnitMonadPlus
 
 }
 
@@ -45,7 +45,12 @@ private class IOMonadError[E] extends IOMonad[E] with MonadError[IO[E, ?], E] {
 private trait IOPlus[E] extends Plus[IO[E, ?]] {
   override def plus[A](a: IO[E, A], b: => IO[E, A]): IO[E, A] = a.catchAll(_ => b)
 }
-private class IOMonadPlus extends IOMonadError[Unit] with IOPlus[Unit] with MonadPlus[IO[Unit, ?]] {
+private class IOUnitMonadPlus extends IOMonadError[Unit] with IOPlus[Unit] with MonadPlus[IO[Unit, ?]] {
+  // note that if we were to implement MonadPlus for an arbitrary E, we would
+  // need to know the `zero` value (`Monoid`) and to be lawful we must consider
+  // if errors are empty (`Equal`) when implementing `plus` for two errors. This
+  // would therefore have a performance penalty on constructing the `Monad`, so
+  // we choose not to implement it.
   override def empty[A]: IO[Unit, A] = raiseError(())
 }
 
