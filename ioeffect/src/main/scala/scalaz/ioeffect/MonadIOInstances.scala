@@ -1,4 +1,5 @@
-package scalaz.ioeffect
+package scalaz
+package ioeffect
 
 import scalaz._
 import Scalaz._

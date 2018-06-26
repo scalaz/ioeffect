@@ -3,10 +3,9 @@ package scalaz.ioeffect
 
 import scala.annotation.switch
 import scala.concurrent.duration._
-import scalaz.{ -\/, @@, \/, \/-, unused, Maybe }
+import scalaz.{ -\/, @@, \/, \/-, unused, Maybe, Monad }
 import scalaz.syntax.either._
 import scalaz.ioeffect.Errors._
-import scalaz.ioeffect.Errors.TerminatedException
 import scalaz.Liskov.<~<
 import scalaz.Tags.Parallel
 
@@ -526,6 +525,12 @@ sealed abstract class IO[E, A] { self =>
    */
   final def fold[E2, B](err: E => B, succ: A => B): IO[E2, B] =
     self.attempt[E2].map(_.fold(err, succ))
+
+  /**
+   * For some monad F and some error type E, lift this IO
+   * into F if there is a monadIO instance for F
+   */
+  final def liftIO[F[_]: Monad](implicit M: MonadIO[F, E]): F[A] = M.liftIO(self)
 
   /**
    * An integer that identifies the term in the `IO` sum type to which this
