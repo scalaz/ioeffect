@@ -8,6 +8,9 @@ abstract class IOInstances extends IOInstances1 {
     new IOMonadError[Throwable] with IOPlus[Throwable]
 
   implicit val taskParAp: Applicative[Task.Par] = new IOParApplicative[Throwable]
+
+  implicit val ioUnitMonadPlus: MonadPlus[IO[Unit, ?]] with BindRec[IO[Unit, ?]] = new IOMonadPlus
+
 }
 
 sealed abstract class IOInstances1 extends IOInstance2 {
@@ -17,9 +20,7 @@ sealed abstract class IOInstances1 extends IOInstance2 {
   implicit def ioParAp[E]: Applicative[IO.Par[E, ?]] = new IOParApplicative[E]
 }
 
-sealed abstract class IOInstance2 {
-  implicit def ioMonadPlus[E: Monoid]: MonadPlus[IO[E, ?]] with BindRec[IO[E, ?]] = new IOMonadPlus[E]
-}
+sealed abstract class IOInstance2 {}
 
 private class IOMonad[E] extends Monad[IO[E, ?]] with BindRec[IO[E, ?]] {
   override def map[A, B](fa: IO[E, A])(f: A => B): IO[E, B]         = fa.map(f)
@@ -44,10 +45,8 @@ private class IOMonadError[E] extends IOMonad[E] with MonadError[IO[E, ?], E] {
 private trait IOPlus[E] extends Plus[IO[E, ?]] {
   override def plus[A](a: IO[E, A], b: => IO[E, A]): IO[E, A] = a.catchAll(_ => b)
 }
-
-// annoyingly, we just need M.zero
-private class IOMonadPlus[E](implicit M: Monoid[E]) extends IOMonadError[E] with IOPlus[E] with MonadPlus[IO[E, ?]] {
-  override def empty[A]: IO[E, A] = raiseError(M.zero)
+private class IOMonadPlus extends IOMonadError[Unit] with IOPlus[Unit] with MonadPlus[IO[Unit, ?]] {
+  override def empty[A]: IO[Unit, A] = raiseError(())
 }
 
 private trait IOBifunctor extends Bifunctor[IO] {
