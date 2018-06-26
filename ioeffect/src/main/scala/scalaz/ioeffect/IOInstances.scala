@@ -14,13 +14,17 @@ abstract class IOInstances extends IOInstances1 {
 }
 
 sealed abstract class IOInstances1 extends IOInstance2 {
-  implicit def ioInstances[E]: MonadError[IO[E, ?], E] with BindRec[IO[E, ?]] with Bifunctor[IO] with Plus[IO[E, ?]] =
-    new IOMonadError[E] with IOPlus[E] with IOBifunctor
+  implicit def ioMonoidInstances[E: Monoid]
+    : MonadError[IO[E, ?], E] with BindRec[IO[E, ?]] with Bifunctor[IO] with MonadPlus[IO[E, ?]] =
+    new IOMonadPlus[E] with IOBifunctor
 
   implicit def ioParAp[E]: Applicative[IO.Par[E, ?]] = new IOParApplicative[E]
 }
 
-sealed abstract class IOInstance2 {}
+sealed abstract class IOInstance2 {
+  implicit def ioInstances[E]: MonadError[IO[E, ?], E] with BindRec[IO[E, ?]] with Bifunctor[IO] with Plus[IO[E, ?]] =
+    new IOMonadError[E] with IOPlus[E] with IOBifunctor
+}
 
 private class IOMonad[E] extends Monad[IO[E, ?]] with BindRec[IO[E, ?]] {
   override def map[A, B](fa: IO[E, A])(f: A => B): IO[E, B]         = fa.map(f)
@@ -46,12 +50,17 @@ private trait IOPlus[E] extends Plus[IO[E, ?]] {
   override def plus[A](a: IO[E, A], b: => IO[E, A]): IO[E, A] = a.catchAll(_ => b)
 }
 private class IOUnitMonadPlus extends IOMonadError[Unit] with IOPlus[Unit] with MonadPlus[IO[Unit, ?]] {
-  // note that if we were to implement MonadPlus for an arbitrary E, we would
-  // need to know the `zero` value (`Monoid`) and to be lawful we must consider
-  // if errors are empty (`Equal`) when implementing `plus` for two errors. This
-  // would therefore have a performance penalty on constructing the `Monad`, so
-  // we choose not to implement it.
   override def empty[A]: IO[Unit, A] = raiseError(())
+}
+
+private class IOMonadPlus[E: Monoid] extends IOMonadError[E] with MonadPlus[IO[E, ?]] {
+  override def plus[A](a: IO[E, A], b: => IO[E, A]): IO[E, A] =
+    a.catchAll { e1 =>
+      b.catchAll { e2 =>
+        IO.fail(Monoid[E].append(e1, e2))
+      }
+    }
+  override def empty[A]: IO[E, A] = raiseError(Monoid[E].zero)
 }
 
 private trait IOBifunctor extends Bifunctor[IO] {
