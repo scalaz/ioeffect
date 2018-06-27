@@ -6,7 +6,9 @@ import cats.syntax.all._
 
 import scala.util.control.NonFatal
 
-object catz extends RTS {
+object catz extends RTS with IOEffectInstance
+private[ioeffect] trait IOEffectInstance {
+  this: RTS =>
 
   implicit val catsEffectInstance: Effect[Task] = new Effect[Task] {
     def runAsync[A](
