@@ -22,7 +22,7 @@ import Promise.internal._
  * } yield value
  * }}}
  */
-class Promise[E, A] private (private val state: AtomicReference[State[E, A]]) extends AnyVal {
+final class Promise[E, A] private (private val state: AtomicReference[State[E, A]]) extends AnyVal {
 
   /**
    * Retrieves the value of the promise, suspending the fiber running the action
