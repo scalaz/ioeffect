@@ -26,7 +26,7 @@ object ProjectKeys {
       "com.github.ghik" %% "silencer-lib" % silencerVersion % "provided"
     )
 
-  val specs2Version = "4.3.0"
+  val specs2Version = "4.2.0"
 
   def extraScalacOptions(scalaVersion: String) =
     CrossVersion.partialVersion(scalaVersion) match {
