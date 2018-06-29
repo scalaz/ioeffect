@@ -70,14 +70,11 @@ private trait IOBifunctor extends Bifunctor[IO] {
 
 private class IOParApplicative[E] extends Applicative[IO.Par[E, ?]] {
   override def point[A](a: => A): IO.Par[E, A] = Tag(IO.point(a))
-  override def ap[A, B](fa: => IO.Par[E, A])(f: => IO.Par[E, A => B]): IO.Par[E, B] = {
-    lazy val fa0: IO[E, A] = Tag.unwrap(fa)
-    Tag(Tag.unwrap(f).flatMap(x => fa0.map(x)))
-  }
-
   override def map[A, B](fa: IO.Par[E, A])(f: A => B): IO.Par[E, B] =
     Tag(Tag.unwrap(fa).map(f))
 
+  override def ap[A, B](fa: => IO.Par[E, A])(f: => IO.Par[E, A => B]): IO.Par[E, B] =
+    apply2(fa, f)((a, abc) => abc(a))
   override def apply2[A, B, C](
     fa: => IO.Par[E, A],
     fb: => IO.Par[E, B]
